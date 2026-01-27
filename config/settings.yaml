@@ -16,9 +16,9 @@ skill:
 
 # スクリーンショット設定
 screenshot:
-  # Windows側パス（参考用）- 各自の環境に合わせて変更
+  # Windows側パス（参考用）
   windows_path: "C:\\Users\\{{USERNAME}}\\Pictures\\Screenshots"
-  # WSL側パス（実際に使用）- 各自の環境に合わせて変更
+  # WSL側パス（実際に使用）
   path: "/mnt/c/Users/{{USERNAME}}/Pictures/Screenshots"
 
 # ログ設定
