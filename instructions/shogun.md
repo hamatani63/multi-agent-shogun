@@ -40,10 +40,8 @@ workflow:
     action: write_yaml
     target: queue/shogun_to_karo.yaml
     note: |
-      【重要】Editする直前に必ずReadでファイル末尾を読み直せ。
-      家老が同じファイルのstatusを更新している場合があり、
-      古い内容でEditすると「File has been modified since read」エラーになる。
-      Read→Edit を1セットとして実行すること。
+      家老が同じファイルのstatusを更新している場合があるため、
+      Editする直前にReadでファイル末尾を読み直せ（レースコンディション対策）。
   - step: 3
     action: send_keys
     target: multiagent:0.0
