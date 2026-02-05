@@ -552,6 +552,15 @@ if [ "$SETUP_ONLY" = false ]; then
     fi
     log_info "バックエンド: $BACKEND"
 
+    # 足軽数を読み込み（バックエンド別）
+    if [ "$BACKEND" = "gemini" ]; then
+        NUM_ASHIGARU=$(grep -A10 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "num_ashigaru:" | awk '{print $2}' || echo "3")
+    else
+        NUM_ASHIGARU=$(grep -A10 "^claude:" ./config/settings.yaml 2>/dev/null | grep "num_ashigaru:" | awk '{print $2}' || echo "8")
+    fi
+    NUM_ASHIGARU=${NUM_ASHIGARU:-8}
+    log_info "足軽数: $NUM_ASHIGARU"
+
     # CLI コマンドの存在チェック
     if [ "$BACKEND" = "gemini" ]; then
         if ! command -v gemini &> /dev/null; then
@@ -630,30 +639,22 @@ if [ "$SETUP_ONLY" = false ]; then
 
     if [ "$KESSEN_MODE" = true ]; then
         # 決戦の陣: 全足軽 強モデル
-        for i in {1..8}; do
+        for i in $(seq 1 $NUM_ASHIGARU); do
             p=$((PANE_BASE + i))
             ASHIGARU_CMD=$(get_agent_cmd "ashigaru_strong")
             tmux send-keys -t "multiagent:agents.${p}" "$ASHIGARU_CMD"
             tmux send-keys -t "multiagent:agents.${p}" Enter
         done
-        log_info "  └─ 足軽1-8（強モデル）、決戦の陣で召喚完了"
+        log_info "  └─ 足軽1-${NUM_ASHIGARU}（強モデル）、決戦の陣で召喚完了"
     else
-        # 平時の陣: 足軽1-4=速モデル, 足軽5-8=強モデル
-        for i in {1..4}; do
-            p=$((PANE_BASE + i))
-            ASHIGARU_CMD=$(get_agent_cmd "ashigaru_fast")
-            tmux send-keys -t "multiagent:agents.${p}" "$ASHIGARU_CMD"
-            tmux send-keys -t "multiagent:agents.${p}" Enter
-        done
-        log_info "  └─ 足軽1-4（速モデル）、召喚完了"
-
-        for i in {5..8}; do
+        # 平時の陣: 全足軽同一モデル（Gemini対応）
+        for i in $(seq 1 $NUM_ASHIGARU); do
             p=$((PANE_BASE + i))
             ASHIGARU_CMD=$(get_agent_cmd "ashigaru_strong")
             tmux send-keys -t "multiagent:agents.${p}" "$ASHIGARU_CMD"
             tmux send-keys -t "multiagent:agents.${p}" Enter
         done
-        log_info "  └─ 足軽5-8（強モデル）、召喚完了"
+        log_info "  └─ 足軽1-${NUM_ASHIGARU}、召喚完了"
     fi
 
     if [ "$KESSEN_MODE" = true ]; then
@@ -767,10 +768,10 @@ NINJA_EOF
     sleep 0.5
     tmux send-keys -t "multiagent:agents.${PANE_BASE}" Enter
 
-    # 足軽に指示書を読み込ませる（1-8）
+    # 足軽に指示書を読み込ませる
     sleep 2
     log_info "  └─ 足軽に指示書を伝達中..."
-    for i in {1..8}; do
+    for i in $(seq 1 $NUM_ASHIGARU); do
         p=$((PANE_BASE + i))
         tmux send-keys -t "multiagent:agents.${p}" "汝は足軽${i}号なり。instructions/ashigaru.md を読め。queue/tasks/ashigaru${i}.yaml からタスクを受け取り、完了後は queue/reports/ashigaru${i}_report.yaml に報告せよ。"
         sleep 0.3
