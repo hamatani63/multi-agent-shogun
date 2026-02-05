@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "env": {
+        "MEMORY_FILE_PATH": "${PROJECT_ROOT}/memory/shogun_memory.jsonl"
+      }
+    }
+  },
+  "trustedFolders": [
+    "${PROJECT_ROOT}"
+  ]
+}

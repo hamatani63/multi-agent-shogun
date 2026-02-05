@@ -2,12 +2,15 @@
 
 <div align="center">
 
-**Claude Code マルチエージェント統率システム**
+**Claude Code / Gemini CLI マルチエージェント統率システム**
 
 *コマンド1つで、8体のAIエージェントが並列稼働*
 
+**Claude Code CLI と Gemini CLI の両方に対応！**
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Claude-Code-blueviolet)](https://claude.ai)
+[![Gemini CLI](https://img.shields.io/badge/Gemini-CLI-blue)](https://github.com/google-gemini/gemini-cli)
 [![tmux](https://img.shields.io/badge/tmux-required-green)](https://github.com/tmux/tmux)
 
 [English](README.md) | [日本語](README_ja.md)
@@ -618,6 +621,53 @@ claude mcp list
 language: ja   # 日本語のみ
 language: en   # 日本語 + 英訳併記
 ```
+
+---
+
+## 🌐 Gemini CLI 対応
+
+multi-agent-shogunは**Gemini CLI**にも対応しています。Claude Code CLIの代替バックエンドとして使用できます。
+
+### バックエンド切替
+
+`config/settings.yaml` を編集：
+
+```yaml
+# Claude バックエンド（デフォルト）
+backend: claude
+
+# Gemini バックエンド
+backend: gemini
+```
+
+### Gemini用設定
+
+```yaml
+gemini:
+  model_shogun: gemini-3-flash-preview
+  model_karo: gemini-3-flash-preview
+  model_ashigaru_strong: gemini-3-flash-preview
+  model_ashigaru_fast: gemini-3-flash-preview
+  num_ashigaru: 3  # レート制限対策で8→3に削減
+  auth_method: oauth
+```
+
+### Claude vs Gemini 比較
+
+| 項目 | Claude Code CLI | Gemini CLI |
+|------|----------------|------------|
+| 自動承認 | `--dangerously-skip-permissions` | `--yolo` |
+| 推奨足軽数 | 8人 | 3人（レート制限対策） |
+| 無料枠 | なし（API課金） | 1,000リクエスト/日/モデル |
+| 指示遵守度 | 高い | 明示的なプロンプトが必要 |
+
+### Gemini利用時の注意点
+
+- **レート制限**: Google OAuth無料枠には日次制限あり。足軽数を3人に減らすと安定
+- **モデル切替**: クォータ枯渇時は別モデルに切替可能（例: `gemini-3-flash-preview`）
+- **起動プロンプト**: Geminiには委譲ルールを明示的に伝える必要あり
+
+詳細は [docs/08_gemini_cli_implementation_plan.md](docs/08_gemini_cli_implementation_plan.md) を参照。
 
 ---
 

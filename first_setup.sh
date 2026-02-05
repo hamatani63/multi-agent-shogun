@@ -326,6 +326,54 @@ else
 fi
 
 # ============================================================
+# STEP 5.5: Gemini CLI チェック
+# ============================================================
+log_step "STEP 5.5: Gemini CLI チェック"
+
+if command -v gemini &> /dev/null; then
+    # バージョン取得を試みる
+    GEMINI_VERSION=$(gemini --version 2>/dev/null || echo "unknown")
+    log_success "Gemini CLI がインストール済みです"
+    log_info "バージョン: $GEMINI_VERSION"
+    RESULTS+=("Gemini CLI: OK")
+else
+    log_warn "Gemini CLI がインストールされていません"
+    echo ""
+
+    if command -v npm &> /dev/null; then
+        echo "  インストールコマンド:"
+        echo "     npm install -g @google/gemini-cli"
+        echo ""
+        if [ ! -t 0 ]; then
+            REPLY="Y"
+        else
+            read -p "  今すぐインストールしますか? [Y/n]: " REPLY
+        fi
+        REPLY=${REPLY:-Y}
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            log_info "Gemini CLI をインストール中..."
+            npm install -g @google/gemini-cli
+
+            if command -v gemini &> /dev/null; then
+                log_success "Gemini CLI インストール完了"
+                RESULTS+=("Gemini CLI: インストール完了")
+            else
+                log_error "インストールに失敗しました。パスを確認してください"
+                RESULTS+=("Gemini CLI: インストール失敗")
+                # Gemini CLIは必須ではないのでエラーフラグは立てない
+            fi
+        else
+            log_warn "インストールをスキップしました"
+            RESULTS+=("Gemini CLI: 未インストール (スキップ)")
+            # Gemini CLIは必須ではないのでエラーフラグは立てない
+        fi
+    else
+        echo "  npm がインストールされていないため、先に Node.js をインストールしてください"
+        RESULTS+=("Gemini CLI: 未インストール (npm必要)")
+    fi
+fi
+
+# ============================================================
 # STEP 6: ディレクトリ構造作成
 # ============================================================
 log_step "STEP 6: ディレクトリ構造作成"
@@ -633,27 +681,85 @@ fi
 # ============================================================
 log_step "STEP 11: Memory MCP セットアップ"
 
-if command -v claude &> /dev/null; then
-    # Memory MCP が既に設定済みか確認
-    if claude mcp list 2>/dev/null | grep -q "memory"; then
-        log_info "Memory MCP は既に設定済みです"
-        RESULTS+=("Memory MCP: OK (設定済み)")
-    else
-        log_info "Memory MCP を設定中..."
-        if claude mcp add memory \
-            -e MEMORY_FILE_PATH="$SCRIPT_DIR/memory/shogun_memory.jsonl" \
-            -- npx -y @modelcontextprotocol/server-memory 2>/dev/null; then
-            log_success "Memory MCP 設定完了"
-            RESULTS+=("Memory MCP: 設定完了")
-        else
-            log_warn "Memory MCP の設定に失敗しました（手動で設定可能）"
-            RESULTS+=("Memory MCP: 設定失敗 (手動設定可能)")
-        fi
-    fi
-else
-    log_warn "claude コマンドが見つからないため Memory MCP 設定をスキップ"
-    RESULTS+=("Memory MCP: スキップ (claude未インストール)")
+# バックエンド設定を読み込み
+BACKEND="claude"
+SETTINGS_FILE="$SCRIPT_DIR/config/settings.yaml"
+if [ -f "$SETTINGS_FILE" ]; then
+    BACKEND=$(grep "^backend:" "$SETTINGS_FILE" | cut -d' ' -f2 | tr -d ' ' || echo "claude")
 fi
+log_info "現在のバックエンド: $BACKEND"
+
+# Claude用MCP設定
+setup_claude_mcp() {
+    if command -v claude &> /dev/null; then
+        # Memory MCP が既に設定済みか確認
+        if claude mcp list 2>/dev/null | grep -q "memory"; then
+            log_info "Claude Memory MCP は既に設定済みです"
+            RESULTS+=("Claude Memory MCP: OK (設定済み)")
+        else
+            log_info "Claude Memory MCP を設定中..."
+            if claude mcp add memory \
+                -e MEMORY_FILE_PATH="$SCRIPT_DIR/memory/shogun_memory.jsonl" \
+                -- npx -y @modelcontextprotocol/server-memory 2>/dev/null; then
+                log_success "Claude Memory MCP 設定完了"
+                RESULTS+=("Claude Memory MCP: 設定完了")
+            else
+                log_warn "Claude Memory MCP の設定に失敗しました（手動で設定可能）"
+                RESULTS+=("Claude Memory MCP: 設定失敗 (手動設定可能)")
+            fi
+        fi
+    else
+        log_warn "claude コマンドが見つからないため Claude Memory MCP 設定をスキップ"
+        RESULTS+=("Claude Memory MCP: スキップ (claude未インストール)")
+    fi
+}
+
+# Gemini用MCP設定
+setup_gemini_mcp() {
+    if command -v gemini &> /dev/null; then
+        GEMINI_SETTINGS_DIR="${HOME}/.gemini"
+        GEMINI_SETTINGS_FILE="${GEMINI_SETTINGS_DIR}/settings.json"
+        TEMPLATE_FILE="$SCRIPT_DIR/config/gemini_settings.json.template"
+        
+        # Gemini設定ディレクトリを作成
+        mkdir -p "${GEMINI_SETTINGS_DIR}"
+        
+        if [ -f "$GEMINI_SETTINGS_FILE" ]; then
+            # 既存の設定が存在する場合
+            if grep -q '"memory"' "$GEMINI_SETTINGS_FILE" 2>/dev/null; then
+                log_info "Gemini Memory MCP は既に設定済みです"
+                RESULTS+=("Gemini Memory MCP: OK (設定済み)")
+            else
+                log_warn "Gemini settings.json に Memory MCP を追加してください"
+                log_info "テンプレート: $TEMPLATE_FILE"
+                RESULTS+=("Gemini Memory MCP: 手動設定必要")
+            fi
+        else
+            # テンプレートから設定ファイルを生成
+            if [ -f "$TEMPLATE_FILE" ]; then
+                log_info "Gemini Memory MCP を設定中..."
+                sed "s|\${PROJECT_ROOT}|${SCRIPT_DIR}|g" "$TEMPLATE_FILE" > "$GEMINI_SETTINGS_FILE"
+                log_success "Gemini Memory MCP 設定完了"
+                log_info "設定ファイル: $GEMINI_SETTINGS_FILE"
+                RESULTS+=("Gemini Memory MCP: 設定完了")
+            else
+                log_warn "テンプレートファイルが見つかりません: $TEMPLATE_FILE"
+                RESULTS+=("Gemini Memory MCP: 設定失敗 (テンプレートなし)")
+            fi
+        fi
+    else
+        log_warn "gemini コマンドが見つからないため Gemini Memory MCP 設定をスキップ"
+        RESULTS+=("Gemini Memory MCP: スキップ (gemini未インストール)")
+    fi
+}
+
+# 両方のバックエンド用にMCPをセットアップ
+# （どちらのCLIを使用しても動作するように）
+log_info "Claude CLI用MCP設定..."
+setup_claude_mcp
+echo ""
+log_info "Gemini CLI用MCP設定..."
+setup_gemini_mcp
 
 # ============================================================
 # 結果サマリー

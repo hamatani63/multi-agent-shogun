@@ -188,7 +188,7 @@ show_battle_cry() {
     echo -e "\033[1;31m║\033[0m \033[1;33m███████║██║  ██║╚██████╔╝   ██║   ███████║╚██████╔╝╚█████╔╝██║██║ ╚████║\033[0m \033[1;31m║\033[0m"
     echo -e "\033[1;31m║\033[0m \033[1;33m╚══════╝╚═╝  ╚═╝ ╚═════╝    ╚═╝   ╚══════╝ ╚═════╝  ╚════╝ ╚═╝╚═╝  ╚═══╝\033[0m \033[1;31m║\033[0m"
     echo -e "\033[1;31m╠══════════════════════════════════════════════════════════════════════════════════╣\033[0m"
-    echo -e "\033[1;31m║\033[0m       \033[1;37m出陣じゃーーー！！！\033[0m    \033[1;36m⚔\033[0m    \033[1;35m天下布武！\033[0m                          \033[1;31m║\033[0m"
+    echo -e "\033[1;31m║\033[0m       \033[1;37m出陣じゃーーー！！！\033[0m    \033[1;36m⚔\033[0m    \033[1;35m天下布武！\033[0m                           \033[1;31m║\033[0m"
     echo -e "\033[1;31m╚══════════════════════════════════════════════════════════════════════════════════╝\033[0m"
     echo ""
 
@@ -196,7 +196,7 @@ show_battle_cry() {
     # 足軽隊列（オリジナル）
     # ═══════════════════════════════════════════════════════════════════════════
     echo -e "\033[1;34m  ╔═════════════════════════════════════════════════════════════════════════════╗\033[0m"
-    echo -e "\033[1;34m  ║\033[0m                    \033[1;37m【 足 軽 隊 列 ・ 八 名 配 備 】\033[0m                      \033[1;34m║\033[0m"
+    echo -e "\033[1;34m  ║\033[0m                    \033[1;37m【 足 軽 隊 列 ・ 八 名 配 備 】\033[0m                         \033[1;34m║\033[0m"
     echo -e "\033[1;34m  ╚═════════════════════════════════════════════════════════════════════════════╝\033[0m"
 
     cat << 'ASHIGARU_EOF'
@@ -218,9 +218,9 @@ ASHIGARU_EOF
     # システム情報
     # ═══════════════════════════════════════════════════════════════════════════
     echo -e "\033[1;33m  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
-    echo -e "\033[1;33m  ┃\033[0m  \033[1;37m🏯 multi-agent-shogun\033[0m  〜 \033[1;36m戦国マルチエージェント統率システム\033[0m 〜           \033[1;33m┃\033[0m"
+    echo -e "\033[1;33m  ┃\033[0m  \033[1;37m🏯 multi-agent-shogun\033[0m  〜 \033[1;36m戦国マルチエージェント統率システム\033[0m 〜          \033[1;33m┃\033[0m"
     echo -e "\033[1;33m  ┃\033[0m                                                                           \033[1;33m┃\033[0m"
-    echo -e "\033[1;33m  ┃\033[0m    \033[1;35m将軍\033[0m: プロジェクト統括    \033[1;31m家老\033[0m: タスク管理    \033[1;34m足軽\033[0m: 実働部隊×8      \033[1;33m┃\033[0m"
+    echo -e "\033[1;33m  ┃\033[0m    \033[1;35m将軍\033[0m: プロジェクト統括    \033[1;31m家老\033[0m: タスク管理    \033[1;34m足軽\033[0m: 実働部隊×8         \033[1;33m┃\033[0m"
     echo -e "\033[1;33m  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\033[0m"
     echo ""
 }
@@ -391,7 +391,7 @@ if ! command -v tmux &> /dev/null; then
     echo "  ║  tmux が見つかりません                                 ║"
     echo "  ╠════════════════════════════════════════════════════════╣"
     echo "  ║  Run first_setup.sh first:                            ║"
-    echo "  ║  まず first_setup.sh を実行してください:               ║"
+    echo "  ║  まず first_setup.sh を実行してください:                  ║"
     echo "  ║     ./first_setup.sh                                  ║"
     echo "  ╚════════════════════════════════════════════════════════╝"
     echo ""
@@ -430,14 +430,14 @@ log_war "⚔️ 家老・足軽の陣を構築中（9名配備）..."
 if ! tmux new-session -d -s multiagent -n "agents" 2>/dev/null; then
     echo ""
     echo "  ╔════════════════════════════════════════════════════════════╗"
-    echo "  ║  [ERROR] Failed to create tmux session 'multiagent'      ║"
-    echo "  ║  tmux セッション 'multiagent' の作成に失敗しました       ║"
+    echo "  ║  [ERROR] Failed to create tmux session 'multiagent'        ║"
+    echo "  ║  tmux セッション 'multiagent' の作成に失敗しました              ║"
     echo "  ╠════════════════════════════════════════════════════════════╣"
-    echo "  ║  An existing session may be running.                     ║"
-    echo "  ║  既存セッションが残っている可能性があります              ║"
-    echo "  ║                                                          ║"
-    echo "  ║  Check: tmux ls                                          ║"
-    echo "  ║  Kill:  tmux kill-session -t multiagent                  ║"
+    echo "  ║  An existing session may be running.                       ║"
+    echo "  ║  既存セッションが残っている可能性があります                       ║"
+    echo "  ║                                                            ║"
+    echo "  ║  Check: tmux ls                                            ║"
+    echo "  ║  Kill:  tmux kill-session -t multiagent                    ║"
     echo "  ╚════════════════════════════════════════════════════════════╝"
     echo ""
     exit 1
@@ -499,62 +499,126 @@ log_success "  └─ 家老・足軽の陣、構築完了"
 echo ""
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# STEP 6: Claude Code 起動（-s / --setup-only のときはスキップ）
+# STEP 6: LLM CLI 起動（-s / --setup-only のときはスキップ）
 # ═══════════════════════════════════════════════════════════════════════════════
 if [ "$SETUP_ONLY" = false ]; then
-    # Claude Code CLI の存在チェック
-    if ! command -v claude &> /dev/null; then
-        log_info "⚠️  claude コマンドが見つかりません"
-        echo "  first_setup.sh を再実行してください:"
-        echo "    ./first_setup.sh"
-        exit 1
+
+    # バックエンド設定を読み込み
+    BACKEND="claude"
+    if [ -f "./config/settings.yaml" ]; then
+        BACKEND=$(grep "^backend:" ./config/settings.yaml 2>/dev/null | awk '{print $2}' || echo "claude")
+    fi
+    log_info "バックエンド: $BACKEND"
+
+    # 足軽数を読み込み（バックエンド別）
+    if [ "$BACKEND" = "gemini" ]; then
+        NUM_ASHIGARU=$(grep -A10 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "num_ashigaru:" | awk '{print $2}' || echo "3")
+    else
+        NUM_ASHIGARU=$(grep -A10 "^claude:" ./config/settings.yaml 2>/dev/null | grep "num_ashigaru:" | awk '{print $2}' || echo "8")
+    fi
+    NUM_ASHIGARU=${NUM_ASHIGARU:-8}
+    log_info "足軽数: $NUM_ASHIGARU"
+
+    # CLI コマンドの存在チェック
+    if [ "$BACKEND" = "gemini" ]; then
+        if ! command -v gemini &> /dev/null; then
+            log_info "⚠️  gemini コマンドが見つかりません"
+            echo "  first_setup.sh を再実行してください:"
+            echo "    ./first_setup.sh"
+            exit 1
+        fi
+        CLI_NAME="Gemini CLI"
+    else
+        if ! command -v claude &> /dev/null; then
+            log_info "⚠️  claude コマンドが見つかりません"
+            echo "  first_setup.sh を再実行してください:"
+            echo "    ./first_setup.sh"
+            exit 1
+        fi
+        CLI_NAME="Claude Code"
     fi
 
-    log_war "👑 全軍に Claude Code を召喚中..."
+    log_war "👑 全軍に ${CLI_NAME} を召喚中..."
+
+    # エージェント起動コマンド生成関数
+    get_agent_cmd() {
+        local role=$1  # shogun, karo, ashigaru_strong, ashigaru_fast
+        
+        if [ "$BACKEND" = "gemini" ]; then
+            # Gemini CLI (--yolo で全操作を自動承認)
+            case $role in
+                shogun)
+                    echo "gemini --model gemini-3-flash-preview --yolo"
+                    ;;
+                karo)
+                    echo "gemini --model gemini-3-flash-preview --yolo"
+                    ;;
+                ashigaru_strong)
+                    echo "gemini --model gemini-3-flash-preview --yolo"
+                    ;;
+                ashigaru_fast)
+                    echo "gemini --model gemini-3-flash-preview --yolo"
+                    ;;
+            esac
+        else
+            # Claude Code CLI
+            case $role in
+                shogun)
+                    echo "MAX_THINKING_TOKENS=0 claude --model opus --dangerously-skip-permissions"
+                    ;;
+                karo)
+                    echo "claude --model opus --dangerously-skip-permissions"
+                    ;;
+                ashigaru_strong)
+                    echo "claude --model opus --dangerously-skip-permissions"
+                    ;;
+                ashigaru_fast)
+                    echo "claude --model sonnet --dangerously-skip-permissions"
+                    ;;
+            esac
+        fi
+    }
 
     # 将軍
-    tmux send-keys -t shogun:main "MAX_THINKING_TOKENS=0 claude --model opus --dangerously-skip-permissions"
+    SHOGUN_CMD=$(get_agent_cmd "shogun")
+    tmux send-keys -t shogun:main "$SHOGUN_CMD"
     tmux send-keys -t shogun:main Enter
     log_info "  └─ 将軍、召喚完了"
 
     # 少し待機（安定のため）
     sleep 1
 
-    # 家老（pane 0）: Opus Thinking
+    # 家老（pane 0）
     p=$((PANE_BASE + 0))
-    tmux send-keys -t "multiagent:agents.${p}" "claude --model opus --dangerously-skip-permissions"
+    KARO_CMD=$(get_agent_cmd "karo")
+    tmux send-keys -t "multiagent:agents.${p}" "$KARO_CMD"
     tmux send-keys -t "multiagent:agents.${p}" Enter
-    log_info "  └─ 家老（Opus Thinking）、召喚完了"
+    log_info "  └─ 家老、召喚完了"
 
     if [ "$KESSEN_MODE" = true ]; then
-        # 決戦の陣: 全足軽 Opus Thinking
-        for i in {1..8}; do
+        # 決戦の陣: 全足軽 強モデル
+        for i in $(seq 1 $NUM_ASHIGARU); do
             p=$((PANE_BASE + i))
-            tmux send-keys -t "multiagent:agents.${p}" "claude --model opus --dangerously-skip-permissions"
+            ASHIGARU_CMD=$(get_agent_cmd "ashigaru_strong")
+            tmux send-keys -t "multiagent:agents.${p}" "$ASHIGARU_CMD"
             tmux send-keys -t "multiagent:agents.${p}" Enter
         done
-        log_info "  └─ 足軽1-8（Opus Thinking）、決戦の陣で召喚完了"
+        log_info "  └─ 足軽1-${NUM_ASHIGARU}（強モデル）、決戦の陣で召喚完了"
     else
-        # 平時の陣: 足軽1-4=Sonnet, 足軽5-8=Opus
-        for i in {1..4}; do
+        # 平時の陣: 全足軽同一モデル（Gemini対応）
+        for i in $(seq 1 $NUM_ASHIGARU); do
             p=$((PANE_BASE + i))
-            tmux send-keys -t "multiagent:agents.${p}" "claude --model sonnet --dangerously-skip-permissions"
+            ASHIGARU_CMD=$(get_agent_cmd "ashigaru_strong")
+            tmux send-keys -t "multiagent:agents.${p}" "$ASHIGARU_CMD"
             tmux send-keys -t "multiagent:agents.${p}" Enter
         done
-        log_info "  └─ 足軽1-4（Sonnet Thinking）、召喚完了"
-
-        for i in {5..8}; do
-            p=$((PANE_BASE + i))
-            tmux send-keys -t "multiagent:agents.${p}" "claude --model opus --dangerously-skip-permissions"
-            tmux send-keys -t "multiagent:agents.${p}" Enter
-        done
-        log_info "  └─ 足軽5-8（Opus Thinking）、召喚完了"
+        log_info "  └─ 足軽1-${NUM_ASHIGARU}、召喚完了"
     fi
 
     if [ "$KESSEN_MODE" = true ]; then
-        log_success "✅ 決戦の陣で出陣！全軍Opus！"
+        log_success "✅ 決戦の陣で出陣！全軍強モデル！ (Backend: $BACKEND)"
     else
-        log_success "✅ 平時の陣で出陣"
+        log_success "✅ 平時の陣で出陣 (Backend: $BACKEND)"
     fi
     echo ""
 
@@ -629,36 +693,45 @@ NINJA_EOF
     echo -e "                               \033[0;36m[ASCII Art: syntax-samurai/ryu - CC0 1.0 Public Domain]\033[0m"
     echo ""
 
-    echo "  Claude Code の起動を待機中（最大30秒）..."
+    echo "  ${CLI_NAME} の起動を待機中（最大30秒）..."
 
     # 将軍の起動を確認（最大30秒待機）
     for i in {1..30}; do
-        if tmux capture-pane -t shogun:main -p | grep -q "bypass permissions"; then
-            echo "  └─ 将軍の Claude Code 起動確認完了（${i}秒）"
-            break
+        if [ "$BACKEND" = "gemini" ]; then
+            # Gemini CLIの起動確認（プロンプトが表示されているか）
+            if tmux capture-pane -t shogun:main -p | grep -qE "(gemini|>|❯)"; then
+                echo "  └─ 将軍の ${CLI_NAME} 起動確認完了（${i}秒）"
+                break
+            fi
+        else
+            # Claude Code CLIの起動確認
+            if tmux capture-pane -t shogun:main -p | grep -q "bypass permissions"; then
+                echo "  └─ 将軍の ${CLI_NAME} 起動確認完了（${i}秒）"
+                break
+            fi
         fi
         sleep 1
     done
 
-    # 将軍に指示書を読み込ませる
+    # 将軍に指示書を読み込ませる（委譲ルールを強調）
     log_info "  └─ 将軍に指示書を伝達中..."
-    tmux send-keys -t shogun:main "instructions/shogun.md を読んで役割を理解せよ。"
+    tmux send-keys -t shogun:main "汝は将軍なり。instructions/shogun.md を読め。【絶対禁止】自分でタスクを実行するな（F001違反）。全ての作業は queue/shogun_to_karo.yaml に書いて家老（multiagent:agents.0）に委譲せよ。"
     sleep 0.5
     tmux send-keys -t shogun:main Enter
 
-    # 家老に指示書を読み込ませる
+    # 家老に指示書を読み込ませる（タスク分配ルールを強調）
     sleep 2
     log_info "  └─ 家老に指示書を伝達中..."
-    tmux send-keys -t "multiagent:agents.${PANE_BASE}" "instructions/karo.md を読んで役割を理解せよ。"
+    tmux send-keys -t "multiagent:agents.${PANE_BASE}" "汝は家老なり。instructions/karo.md を読め。将軍からの指示は queue/shogun_to_karo.yaml で受け取り、タスクを queue/tasks/ashigaru{N}.yaml に分配せよ。"
     sleep 0.5
     tmux send-keys -t "multiagent:agents.${PANE_BASE}" Enter
 
-    # 足軽に指示書を読み込ませる（1-8）
+    # 足軽に指示書を読み込ませる
     sleep 2
     log_info "  └─ 足軽に指示書を伝達中..."
-    for i in {1..8}; do
+    for i in $(seq 1 $NUM_ASHIGARU); do
         p=$((PANE_BASE + i))
-        tmux send-keys -t "multiagent:agents.${p}" "instructions/ashigaru.md を読んで役割を理解せよ。汝は足軽${i}号である。"
+        tmux send-keys -t "multiagent:agents.${p}" "汝は足軽${i}号なり。instructions/ashigaru.md を読め。queue/tasks/ashigaru${i}.yaml からタスクを受け取り、完了後は queue/reports/ashigaru${i}_report.yaml に報告せよ。"
         sleep 0.3
         tmux send-keys -t "multiagent:agents.${p}" Enter
         sleep 0.5
@@ -702,23 +775,36 @@ echo ""
 
 echo ""
 echo "  ╔══════════════════════════════════════════════════════════╗"
-echo "  ║  🏯 出陣準備完了！天下布武！                              ║"
+echo "  ║  🏯 出陣準備完了！天下布武！                             ║"
 echo "  ╚══════════════════════════════════════════════════════════╝"
 echo ""
 
 if [ "$SETUP_ONLY" = true ]; then
-    echo "  ⚠️  セットアップのみモード: Claude Codeは未起動です"
+    # バックエンド設定を読み込み（セットアップモード用）
+    BACKEND_MSG="claude"
+    CLI_CMD="claude --dangerously-skip-permissions"
+    if [ -f "./config/settings.yaml" ]; then
+        BACKEND_MSG=$(grep "^backend:" ./config/settings.yaml 2>/dev/null | awk '{print $2}' || echo "claude")
+    fi
+    if [ "$BACKEND_MSG" = "gemini" ]; then
+        CLI_CMD="gemini --model gemini-3-flash-preview --yolo"
+        CLI_DISPLAY="Gemini CLI"
+    else
+        CLI_DISPLAY="Claude Code"
+    fi
+    
+    echo "  ⚠️  セットアップのみモード: ${CLI_DISPLAY}は未起動です"
     echo ""
-    echo "  手動でClaude Codeを起動するには:"
+    echo "  手動で${CLI_DISPLAY}を起動するには:"
     echo "  ┌──────────────────────────────────────────────────────────┐"
-    echo "  │  # 将軍を召喚                                            │"
+    echo "  │  # 将軍を召喚                                              │"
     echo "  │  tmux send-keys -t shogun:main \\                         │"
-    echo "  │    'claude --dangerously-skip-permissions' Enter         │"
+    echo "  │    '${CLI_CMD}' Enter                                    │"
     echo "  │                                                          │"
-    echo "  │  # 家老・足軽を一斉召喚                                  │"
-    echo "  │  for p in \$(seq $PANE_BASE $((PANE_BASE+8))); do                                 │"
-    echo "  │      tmux send-keys -t multiagent:agents.\$p \\            │"
-    echo "  │      'claude --dangerously-skip-permissions' Enter       │"
+    echo "  │  # 家老・足軽を一斉召喚                                     │"
+    echo "  │  for p in \$(seq $PANE_BASE $((PANE_BASE+8))); do        │"
+    echo "  │      tmux send-keys -t multiagent:agents.\$p \\          │"
+    echo "  │      '${CLI_CMD}' Enter                                  │"
     echo "  │  done                                                    │"
     echo "  └──────────────────────────────────────────────────────────┘"
     echo ""
@@ -726,14 +812,14 @@ fi
 
 echo "  次のステップ:"
 echo "  ┌──────────────────────────────────────────────────────────┐"
-echo "  │  将軍の本陣にアタッチして命令を開始:                      │"
+echo "  │  将軍の本陣にアタッチして命令を開始:                     │"
 echo "  │     tmux attach-session -t shogun   (または: css)        │"
 echo "  │                                                          │"
-echo "  │  家老・足軽の陣を確認する:                                │"
+echo "  │  家老・足軽の陣を確認する:                               │"
 echo "  │     tmux attach-session -t multiagent   (または: csm)    │"
 echo "  │                                                          │"
-echo "  │  ※ 各エージェントは指示書を読み込み済み。                 │"
-echo "  │    すぐに命令を開始できます。                             │"
+echo "  │  ※ 各エージェントは指示書を読み込み済み。                │"
+echo "  │    すぐに命令を開始できます。                            │"
 echo "  └──────────────────────────────────────────────────────────┘"
 echo ""
 echo "  ════════════════════════════════════════════════════════════"

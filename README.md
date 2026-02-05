@@ -4,11 +4,14 @@
 
 **Command your AI army like a feudal warlord.**
 
-Run 8 Claude Code agents in parallel — orchestrated through a samurai-inspired hierarchy with zero coordination overhead.
+Run 8 AI agents in parallel — orchestrated through a samurai-inspired hierarchy with zero coordination overhead.
+
+**Now supports both Claude Code CLI and Gemini CLI!**
 
 [![GitHub Stars](https://img.shields.io/github/stars/yohey-w/multi-agent-shogun?style=social)](https://github.com/yohey-w/multi-agent-shogun)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Built_for-Claude_Code-blueviolet)](https://code.claude.com)
+[![Gemini CLI](https://img.shields.io/badge/Supports-Gemini_CLI-blue)](https://github.com/google-gemini/gemini-cli)
 [![Shell](https://img.shields.io/badge/Shell%2FBash-100%25-green)]()
 
 [English](README.md) | [日本語](README_ja.md)
@@ -327,6 +330,53 @@ screenshot:
 ```
 
 Tell the Shogun "check the latest screenshot" and it reads your screen captures for visual context. (`Win+Shift+S` on Windows.)
+
+---
+
+## Gemini CLI Support
+
+multi-agent-shogun now supports **Gemini CLI** as an alternative backend to Claude Code CLI.
+
+### Switching backends
+
+Edit `config/settings.yaml`:
+
+```yaml
+# Claude backend (default)
+backend: claude
+
+# Gemini backend
+backend: gemini
+```
+
+### Gemini-specific settings
+
+```yaml
+gemini:
+  model_shogun: gemini-3-flash-preview
+  model_karo: gemini-3-flash-preview
+  model_ashigaru_strong: gemini-3-flash-preview
+  model_ashigaru_fast: gemini-3-flash-preview
+  num_ashigaru: 3  # Reduced from 8 to avoid rate limits
+  auth_method: oauth
+```
+
+### Key differences
+
+| Feature | Claude Code CLI | Gemini CLI |
+|---------|----------------|------------|
+| Auto-approval | `--dangerously-skip-permissions` | `--yolo` |
+| Recommended Ashigaru | 8 | 3 (rate limit friendly) |
+| Free tier | None (API billing) | 1,000 req/day per model |
+| Instruction compliance | High | Requires explicit prompts |
+
+### Gemini-specific notes
+
+- **Rate limits**: Google OAuth free tier has daily limits. Reduce Ashigaru count to 3 for stability.
+- **Model switching**: If quota exhausted on one model, switch to another (e.g., `gemini-3-flash-preview`).
+- **Startup prompts**: Gemini needs explicit delegation rules in startup messages to follow the hierarchy properly.
+
+For detailed implementation notes, see [docs/08_gemini_cli_implementation_plan.md](docs/08_gemini_cli_implementation_plan.md).
 
 ---
 
