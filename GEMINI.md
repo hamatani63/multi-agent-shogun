@@ -354,3 +354,50 @@ Gemini CLIでは、MCPツールは `~/.gemini/settings.json` で設定される�
 ```bash
 cat config/settings.yaml | grep "^backend:"
 ```
+
+---
+
+## Git管理とファイルアクセス
+
+### 問題と解決
+
+Gemini CLIは`.gitignore`を参照してファイルアクセスを制限する。
+しかし、エージェントは`queue/`や`dashboard.md`にアクセスする必要がある。
+
+**解決策**: 動的`.gitignore`切り替え + `.git/info/exclude`
+
+### ファイル構成
+
+| ファイル | 説明 | Git管理 |
+|---------|------|---------|
+| `.gitignore.base` | 共通パターン | ✅ コミット対象 |
+| `.gitignore.gemini` | Gemini用（queue許可） | ✅ コミット対象 |
+| `.gitignore.claude` | Claude用（queue除外） | ✅ コミット対象 |
+| `.gitignore` | 起動時に自動生成 | ❌ 自動生成・無視 |
+| `.git/info/exclude` | ローカル除外設定 | ❌ ローカルのみ |
+
+### 起動時の動作
+
+1. バックエンドを検出（`config/settings.yaml`）
+2. `.gitignore.base` + `.gitignore.{backend}` → `.gitignore` を生成
+3. Gemini版のみ: `.git/info/exclude` を設定
+   - `queue/`, `dashboard.md` をGitから除外
+   - Gemini CLIからはアクセス可能
+
+### 動作の仕組み
+
+```
+【Gemini CLI】
+  ↓ .gitignore を参照
+  ↓ queue/ は除外パターンにない → アクセス許可 ✅
+
+【Git】
+  ↓ .gitignore + .git/info/exclude を参照
+  ↓ queue/ は .git/info/exclude で除外 → コミット対象外 ✅
+```
+
+### 注意事項
+
+- `.git/info/exclude` はローカル設定（リポジトリにコミットされない）
+- 起動スクリプト実行時に自動設定される
+- Claude版では`.gitignore`自体にqueue除外パターンが含まれる
