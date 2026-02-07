@@ -231,6 +231,20 @@ show_battle_cry
 echo -e "  \033[1;33m天下布武！陣立てを開始いたす\033[0m (Setting up the battlefield)"
 echo ""
 
+# バックエンド設定と足軽数を早期読み込み（CLEAN_MODE処理で必要）
+BACKEND="claude"
+if [ -f "./config/settings.yaml" ]; then
+    BACKEND=$(grep "^backend:" ./config/settings.yaml 2>/dev/null | awk '{print $2}' || echo "claude")
+fi
+
+# 足軽数を読み込み（バックエンド別）
+if [ "$BACKEND" = "gemini" ]; then
+    NUM_ASHIGARU=$(grep -A10 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "num_ashigaru:" | awk '{print $2}' || echo "3")
+else
+    NUM_ASHIGARU=$(grep -A10 "^claude:" ./config/settings.yaml 2>/dev/null | grep "num_ashigaru:" | awk '{print $2}' || echo "8")
+fi
+NUM_ASHIGARU=${NUM_ASHIGARU:-8}
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # STEP 1: 既存セッションクリーンアップ
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -273,7 +287,7 @@ if [ "$CLEAN_MODE" = true ]; then
     log_info "📜 前回の軍議記録を破棄中..."
 
     # 足軽タスクファイルリセット
-    for i in {1..8}; do
+    for i in $(seq 1 $NUM_ASHIGARU); do
         cat > ./queue/tasks/ashigaru${i}.yaml << EOF
 # 足軽${i}専用タスクファイル
 task:
@@ -287,7 +301,7 @@ EOF
     done
 
     # 足軽レポートファイルリセット
-    for i in {1..8}; do
+    for i in $(seq 1 $NUM_ASHIGARU); do
         cat > ./queue/reports/ashigaru${i}_report.yaml << EOF
 worker_id: ashigaru${i}
 task_id: null
@@ -463,20 +477,6 @@ echo ""
 # pane-base-index を取得（1 の環境ではペインは 1,2,... になる）
 PANE_BASE=$(tmux show-options -gv pane-base-index 2>/dev/null || echo 0)
 
-# バックエンド設定と足軽数を読み込み
-BACKEND="claude"
-if [ -f "./config/settings.yaml" ]; then
-    BACKEND=$(grep "^backend:" ./config/settings.yaml 2>/dev/null | awk '{print $2}' || echo "claude")
-fi
-
-# 足軽数を読み込み（バックエンド別）
-if [ "$BACKEND" = "gemini" ]; then
-    NUM_ASHIGARU=$(grep -A10 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "num_ashigaru:" | awk '{print $2}' || echo "3")
-else
-    NUM_ASHIGARU=$(grep -A10 "^claude:" ./config/settings.yaml 2>/dev/null | grep "num_ashigaru:" | awk '{print $2}' || echo "8")
-fi
-NUM_ASHIGARU=${NUM_ASHIGARU:-8}
-
 # ═══════════════════════════════════════════════════════════════════════════════
 # STEP 5.1: multiagent セッション作成（動的ペイン数）
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -547,8 +547,9 @@ MODEL_NAMES=()
 
 # 家老のモデル名とタイトル
 if [ "$BACKEND" = "gemini" ]; then
-    PANE_TITLES+=("karo(gemini-3-pro-preview)")
-    MODEL_NAMES+=("gemini-3-pro-preview")
+    KARO_MODEL=$(grep -A10 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "model_karo:" | awk '{print $2}' || echo "gemini-3-pro-preview")
+    PANE_TITLES+=("karo($KARO_MODEL)")
+    MODEL_NAMES+=("$KARO_MODEL")
 else
     PANE_TITLES+=("karo(Opus)")
     MODEL_NAMES+=("Opus Thinking")
@@ -561,8 +562,15 @@ for i in $(seq 1 $NUM_ASHIGARU); do
     AGENT_IDS+=("ashigaru${i}")
     
     if [ "$BACKEND" = "gemini" ]; then
-        PANE_TITLES+=("ashigaru${i}(gemini-3-flash-preview)")
-        MODEL_NAMES+=("gemini-3-flash-preview")
+        # Gemini版: strong_ashigaru_countに応じてモデル切り替え
+        STRONG_COUNT=$(grep -A10 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "strong_ashigaru_count:" | awk '{print $2}' || echo "1")
+        if [ $i -le $STRONG_COUNT ]; then
+            ASHIGARU_MODEL=$(grep -A10 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "model_ashigaru_strong:" | awk '{print $2}' || echo "gemini-3-pro-preview")
+        else
+            ASHIGARU_MODEL=$(grep -A10 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "model_ashigaru_fast:" | awk '{print $2}' || echo "gemini-3-flash-preview")
+        fi
+        PANE_TITLES+=("ashigaru${i}($ASHIGARU_MODEL)")
+        MODEL_NAMES+=("$ASHIGARU_MODEL")
     elif [ "$KESSEN_MODE" = true ]; then
         PANE_TITLES+=("ashigaru${i}(Opus)")
         MODEL_NAMES+=("Opus Thinking")
@@ -629,19 +637,23 @@ if [ "$SETUP_ONLY" = false ]; then
         local role=$1  # shogun, karo, ashigaru_strong, ashigaru_fast
         
         if [ "$BACKEND" = "gemini" ]; then
-            # Gemini CLI (--yolo で全操作を自動承認)
+            # Gemini CLI - settings.yamlからモデル名を読み込み
             case $role in
                 shogun)
-                    echo "gemini --model gemini-3-flash-preview --yolo"
+                    MODEL=$(grep -A10 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "model_shogun:" | awk '{print $2}' || echo "gemini-3-pro-preview")
+                    echo "gemini --model $MODEL --yolo"
                     ;;
                 karo)
-                    echo "gemini --model gemini-3-flash-preview --yolo"
+                    MODEL=$(grep -A10 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "model_karo:" | awk '{print $2}' || echo "gemini-3-pro-preview")
+                    echo "gemini --model $MODEL --yolo"
                     ;;
                 ashigaru_strong)
-                    echo "gemini --model gemini-3-flash-preview --yolo"
+                    MODEL=$(grep -A10 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "model_ashigaru_strong:" | awk '{print $2}' || echo "gemini-3-pro-preview")
+                    echo "gemini --model $MODEL --yolo"
                     ;;
                 ashigaru_fast)
-                    echo "gemini --model gemini-3-flash-preview --yolo"
+                    MODEL=$(grep -A10 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "model_ashigaru_fast:" | awk '{print $2}' || echo "gemini-3-flash-preview")
+                    echo "gemini --model $MODEL --yolo"
                     ;;
             esac
         else
@@ -689,14 +701,30 @@ if [ "$SETUP_ONLY" = false ]; then
         done
         log_info "  └─ 足軽1-${NUM_ASHIGARU}（強モデル）、決戦の陣で召喚完了"
     else
-        # 平時の陣: 全足軽同一モデル（Gemini対応）
-        for i in $(seq 1 $NUM_ASHIGARU); do
-            p=$((PANE_BASE + i))
-            ASHIGARU_CMD=$(get_agent_cmd "ashigaru_strong")
-            tmux send-keys -t "multiagent:agents.${p}" "$ASHIGARU_CMD"
-            tmux send-keys -t "multiagent:agents.${p}" Enter
-        done
-        log_info "  └─ 足軽1-${NUM_ASHIGARU}、召喚完了"
+        # 平時の陣: モデル切り替え対応
+        if [ "$BACKEND" = "gemini" ]; then
+            STRONG_COUNT=$(grep -A10 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "strong_ashigaru_count:" | awk '{print $2}' || echo "1")
+            for i in $(seq 1 $NUM_ASHIGARU); do
+                p=$((PANE_BASE + i))
+                if [ $i -le $STRONG_COUNT ]; then
+                    ASHIGARU_CMD=$(get_agent_cmd "ashigaru_strong")
+                else
+                    ASHIGARU_CMD=$(get_agent_cmd "ashigaru_fast")
+                fi
+                tmux send-keys -t "multiagent:agents.${p}" "$ASHIGARU_CMD"
+                tmux send-keys -t "multiagent:agents.${p}" Enter
+            done
+            log_info "  └─ 足軽1-${STRONG_COUNT}（強モデル）、足軽$((STRONG_COUNT+1))-${NUM_ASHIGARU}（高速モデル）、召喚完了"
+        else
+            # Claude版: 従来通り全て同じモデル
+            for i in $(seq 1 $NUM_ASHIGARU); do
+                p=$((PANE_BASE + i))
+                ASHIGARU_CMD=$(get_agent_cmd "ashigaru_strong")
+                tmux send-keys -t "multiagent:agents.${p}" "$ASHIGARU_CMD"
+                tmux send-keys -t "multiagent:agents.${p}" Enter
+            done
+            log_info "  └─ 足軽1-${NUM_ASHIGARU}、召喚完了"
+        fi
     fi
 
     if [ "$KESSEN_MODE" = true ]; then
@@ -803,10 +831,14 @@ NINJA_EOF
     sleep 0.5
     tmux send-keys -t shogun:main Enter
 
-    # 家老に指示書を読み込ませる（タスク分配ルールを強調）
+    # 家老に指示書を読み込ませる（タスク分配ルールと足軽数を伝達）
     sleep 2
     log_info "  └─ 家老に指示書を伝達中..."
-    tmux send-keys -t "multiagent:agents.${PANE_BASE}" "汝は家老なり。instructions/karo.md を読め。将軍からの指示は queue/shogun_to_karo.yaml で受け取り、タスクを queue/tasks/ashigaru{N}.yaml に分配せよ。"
+    if [ "$BACKEND" = "gemini" ]; then
+        tmux send-keys -t "multiagent:agents.${PANE_BASE}" "汝は家老なり。instructions/karo_gemini.md を読め。足軽は${NUM_ASHIGARU}体である。将軍からの指示は queue/shogun_to_karo.yaml で受け取り、タスクを足軽用YAMLファイルに分配せよ。"
+    else
+        tmux send-keys -t "multiagent:agents.${PANE_BASE}" "汝は家老なり。instructions/karo.md を読め。足軽は${NUM_ASHIGARU}体である。将軍からの指示は queue/shogun_to_karo.yaml で受け取り、タスクを足軽用YAMLファイルに分配せよ。"
+    fi
     sleep 0.5
     tmux send-keys -t "multiagent:agents.${PANE_BASE}" Enter
 
@@ -844,17 +876,28 @@ echo "     ┌──────────────────────
 echo "     │  Pane 0: 将軍 (SHOGUN)      │  ← 総大将・プロジェクト統括"
 echo "     └─────────────────────────────┘"
 echo ""
-echo "     【multiagentセッション】家老・足軽の陣（3x3 = 9ペイン）"
-echo "     ┌─────────┬─────────┬─────────┐"
-echo "     │  karo   │ashigaru3│ashigaru6│"
-echo "     │  (家老) │ (足軽3) │ (足軽6) │"
-echo "     ├─────────┼─────────┼─────────┤"
-echo "     │ashigaru1│ashigaru4│ashigaru7│"
-echo "     │ (足軽1) │ (足軽4) │ (足軽7) │"
-echo "     ├─────────┼─────────┼─────────┤"
-echo "     │ashigaru2│ashigaru5│ashigaru8│"
-echo "     │ (足軽2) │ (足軽5) │ (足軽8) │"
-echo "     └─────────┴─────────┴─────────┘"
+if [ "$BACKEND" = "gemini" ]; then
+    echo "     【multiagentセッション】家老・足軽の陣（2x2 = 4ペイン）"
+    echo "     ┌─────────┬─────────┐"
+    echo "     │  karo   │ashigaru2│"
+    echo "     │  (家老) │ (足軽2) │"
+    echo "     ├─────────┼─────────┤"
+    echo "     │ashigaru1│ashigaru3│"
+    echo "     │ (足軽1) │ (足軽3) │"
+    echo "     └─────────┴─────────┘"
+else
+    echo "     【multiagentセッション】家老・足軽の陣（3x3 = 9ペイン）"
+    echo "     ┌─────────┬─────────┬─────────┐"
+    echo "     │  karo   │ashigaru3│ashigaru6│"
+    echo "     │  (家老) │ (足軽3) │ (足軽6) │"
+    echo "     ├─────────┼─────────┼─────────┤"
+    echo "     │ashigaru1│ashigaru4│ashigaru7│"
+    echo "     │ (足軽1) │ (足軽4) │ (足軽7) │"
+    echo "     ├─────────┼─────────┼─────────┤"
+    echo "     │ashigaru2│ashigaru5│ashigaru8│"
+    echo "     │ (足軽2) │ (足軽5) │ (足軽8) │"
+    echo "     └─────────┴─────────┴─────────┘"
+fi
 echo ""
 
 echo ""
