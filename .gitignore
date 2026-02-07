@@ -19,11 +19,10 @@ skills/
 # Demo/analysis outputs (generated during tasks)
 demo_output/
 
-# Runtime data (generated during operation)
-output/
-queue/research/
-queue/tasks/
-queue/reports/
+# Runtime data - commented out for Gemini CLI access
+# queue/research/  # Keep commented - not currently used
+# queue/tasks/     # Commented for Gemini CLI - agents read/write task files
+# queue/reports/   # Commented for Gemini CLI - agents read/write report files
 
 # Memory MCP data (local to each installation)
 memory/
@@ -31,8 +30,8 @@ memory/
 # Project context (local to each installation, except README)
 context/
 !context/README.md
-queue/*.yaml
-dashboard.md
+# queue/*.yaml # Commented out for Gemini CLI access - agents need to read/write these files
+# dashboard.md  # Commented for Gemini CLI - karo updates this file
 config/projects.yaml
 status/
 config/settings.yaml
