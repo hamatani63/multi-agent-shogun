@@ -171,20 +171,22 @@ EOF
 ### イベント駆動通信（YAML + send-keys）
 - ポーリング禁止（API代金節約のため）
 - 指示・報告内容はYAMLファイルに書く
-- 通知は tmux send-keys で相手を起こす（必ず Enter を使用、C-m 禁止）
-- **send-keys は必ず2回のBash呼び出しに分けよ**（1回で書くとEnterが正しく解釈されない）：
+- 通知は tmux send-keys で相手を起こす（**三段撃ちの法**）
+- **send-keys は「三段撃ち」で行え**：
   ```bash
-  # 【1回目】メッセージを送る
+  # 1. メッセージ送信
   tmux send-keys -t multiagent:0.0 'メッセージ内容'
-  # 【2回目】Enterを送る
-  tmux send-keys -t multiagent:0.0 Enter
+  # 2. 確定（一の弾）
+  sleep 1 && tmux send-keys -t multiagent:0.0 C-m
+  # 3. 実行（二の弾）
+  sleep 1 && tmux send-keys -t multiagent:0.0 C-m
   ```
 
 ### 報告の流れ（割り込み防止設計）
 - **足軽→家老**: 報告YAML記入 + send-keys で家老を起こす（**必須**）
-- **家老→将軍/殿**: dashboard.md 更新のみ（send-keys **禁止**）
+- **家老→将軍/殿**: dashboard.md 更新に加え、メイン任務完了時は [報告] プレフィックスを付けて send-keys で報告（**狼煙プロトコル**）
 - **上→下への指示**: YAML + send-keys で起こす
-- 理由: 殿（人間）の入力中に割り込みが発生するのを防ぐ。足軽→家老は同じtmuxセッション内のため割り込みリスクなし
+- 理由: 報告の遅滞を防ぎつつ、[報告] プレフィックスにより殿（人間）の入力との区別を明確にする。
 
 ### ファイル構成
 ```

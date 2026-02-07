@@ -196,16 +196,21 @@ tmux send-keys -t multiagent:0.0 'メッセージ' Enter
 tmux send-keys -t multiagent:0.0 'メッセージ' && tmux send-keys -t multiagent:0.0 Enter
 ```
 
-### ✅ 正しい方法（2回に分ける）
+### ✅ 正しい方法（三段撃ちの法）
 
 **【1回目】** メッセージを送る：
 ```bash
 tmux send-keys -t multiagent:0.0 'queue/shogun_to_karo.yaml に新しい指示がある。確認して実行せよ。'
 ```
 
-**【2回目】** Enterを送る：
+**【2回目】** 確定（一の弾）：
 ```bash
-tmux send-keys -t multiagent:0.0 Enter
+sleep 1 && tmux send-keys -t multiagent:0.0 C-m
+```
+
+**【3回目】** 実行（二の弾）：
+```bash
+sleep 1 && tmux send-keys -t multiagent:0.0 C-m
 ```
 
 ## 指示の書き方
