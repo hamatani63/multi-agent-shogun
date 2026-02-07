@@ -1,0 +1,58 @@
+# ===========================================
+# .gitignore.base - 共通部分（コミット対象）
+# ===========================================
+# このファイルは起動スクリプトによって
+# .gitignore.{backend} と結合され .gitignore が生成される
+#
+# 注意: 生成された .gitignore 自体はトラックしない
+# テンプレートファイルのみコミットする:
+#   - .gitignore.base (このファイル)
+#   - .gitignore.gemini
+#   - .gitignore.claude
+
+# 生成された .gitignore（テンプレートから自動生成されるため）
+.gitignore
+
+# Order file (internal use only)
+claude-shogun-orders.md
+
+
+# Claude Code settings
+.claude/*
+!.claude/settings.json
+.mcp.json
+
+# Test outputs (generated during testing)
+test_output/
+
+# Generated skills (local development)
+skills/
+
+# Temporary files
+*.tmp
+*.bak
+
+# Demo/analysis outputs (generated during tasks)
+demo_output/
+
+# Memory MCP data (local to each installation)
+memory/
+
+# Project context (local to each installation, except README)
+context/
+!context/README.md
+
+# Project config
+config/projects.yaml
+config/settings.yaml
+
+# Status and logs
+status/
+logs/
+
+# Project details (contains client/confidential info)
+projects/
+
+# Internal docs (operation logs, test plans, article drafts)
+docs/
+archive/
