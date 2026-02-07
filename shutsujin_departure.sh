@@ -181,14 +181,14 @@ show_battle_cry() {
     # タイトルバナー（色付き）
     echo ""
     echo -e "\033[1;31m╔══════════════════════════════════════════════════════════════════════════════════╗\033[0m"
-    echo -e "\033[1;31m║\033[0m \033[1;33m███████╗██╗  ██╗██╗   ██╗████████╗███████╗██╗   ██╗     ██╗██╗███╗   ██╗\033[0m \033[1;31m║\033[0m"
-    echo -e "\033[1;31m║\033[0m \033[1;33m██╔════╝██║  ██║██║   ██║╚══██╔══╝██╔════╝██║   ██║     ██║██║████╗  ██║\033[0m \033[1;31m║\033[0m"
-    echo -e "\033[1;31m║\033[0m \033[1;33m███████╗███████║██║   ██║   ██║   ███████╗██║   ██║     ██║██║██╔██╗ ██║\033[0m \033[1;31m║\033[0m"
-    echo -e "\033[1;31m║\033[0m \033[1;33m╚════██║██╔══██║██║   ██║   ██║   ╚════██║██║   ██║██   ██║██║██║╚██╗██║\033[0m \033[1;31m║\033[0m"
-    echo -e "\033[1;31m║\033[0m \033[1;33m███████║██║  ██║╚██████╔╝   ██║   ███████║╚██████╔╝╚█████╔╝██║██║ ╚████║\033[0m \033[1;31m║\033[0m"
-    echo -e "\033[1;31m║\033[0m \033[1;33m╚══════╝╚═╝  ╚═╝ ╚═════╝    ╚═╝   ╚══════╝ ╚═════╝  ╚════╝ ╚═╝╚═╝  ╚═══╝\033[0m \033[1;31m║\033[0m"
+    echo -e "\033[1;31m║\033[0m     \033[1;33m███████╗██╗  ██╗██╗   ██╗████████╗███████╗██╗   ██╗     ██╗██╗███╗   ██╗\033[0m     \033[1;31m║\033[0m"
+    echo -e "\033[1;31m║\033[0m     \033[1;33m██╔════╝██║  ██║██║   ██║╚══██╔══╝██╔════╝██║   ██║     ██║██║████╗  ██║\033[0m     \033[1;31m║\033[0m"
+    echo -e "\033[1;31m║\033[0m     \033[1;33m███████╗███████║██║   ██║   ██║   ███████╗██║   ██║     ██║██║██╔██╗ ██║\033[0m     \033[1;31m║\033[0m"
+    echo -e "\033[1;31m║\033[0m     \033[1;33m╚════██║██╔══██║██║   ██║   ██║   ╚════██║██║   ██║██   ██║██║██║╚██╗██║\033[0m     \033[1;31m║\033[0m"
+    echo -e "\033[1;31m║\033[0m     \033[1;33m███████║██║  ██║╚██████╔╝   ██║   ███████║╚██████╔╝╚█████╔╝██║██║ ╚████║\033[0m     \033[1;31m║\033[0m"
+    echo -e "\033[1;31m║\033[0m     \033[1;33m╚══════╝╚═╝  ╚═╝ ╚═════╝    ╚═╝   ╚══════╝ ╚═════╝  ╚════╝ ╚═╝╚═╝  ╚═══╝\033[0m     \033[1;31m║\033[0m"
     echo -e "\033[1;31m╠══════════════════════════════════════════════════════════════════════════════════╣\033[0m"
-    echo -e "\033[1;31m║\033[0m       \033[1;37m出陣じゃーーー！！！\033[0m    \033[1;36m⚔\033[0m    \033[1;35m天下布武！\033[0m                           \033[1;31m║\033[0m"
+    echo -e "\033[1;31m║\033[0m             \033[1;37m出陣じゃーーー！！！\033[0m    \033[1;36m⚔\033[0m    \033[1;35m天下布武！\033[0m                              \033[1;31m║\033[0m"
     echo -e "\033[1;31m╚══════════════════════════════════════════════════════════════════════════════════╝\033[0m"
     echo ""
 
@@ -463,10 +463,23 @@ echo ""
 # pane-base-index を取得（1 の環境ではペインは 1,2,... になる）
 PANE_BASE=$(tmux show-options -gv pane-base-index 2>/dev/null || echo 0)
 
+# バックエンド設定と足軽数を読み込み
+BACKEND="claude"
+if [ -f "./config/settings.yaml" ]; then
+    BACKEND=$(grep "^backend:" ./config/settings.yaml 2>/dev/null | awk '{print $2}' || echo "claude")
+fi
+
+# 足軽数を読み込み（バックエンド別）
+if [ "$BACKEND" = "gemini" ]; then
+    NUM_ASHIGARU=$(grep -A10 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "num_ashigaru:" | awk '{print $2}' || echo "3")
+else
+    NUM_ASHIGARU=$(grep -A10 "^claude:" ./config/settings.yaml 2>/dev/null | grep "num_ashigaru:" | awk '{print $2}' || echo "8")
+fi
+NUM_ASHIGARU=${NUM_ASHIGARU:-8}
+
 # ═══════════════════════════════════════════════════════════════════════════════
-# STEP 5.1: multiagent セッション作成（9ペイン：karo + ashigaru1-8）
+# STEP 5.1: multiagent セッション作成（動的ペイン数）
 # ═══════════════════════════════════════════════════════════════════════════════
-log_war "⚔️ 家老・足軽の陣を構築中（9名配備）..."
 
 # 最初のペイン作成
 if ! tmux new-session -d -s multiagent -n "agents" 2>/dev/null; then
@@ -485,46 +498,87 @@ if ! tmux new-session -d -s multiagent -n "agents" 2>/dev/null; then
     exit 1
 fi
 
-# 3x3グリッド作成（合計9ペイン）
+# 動的ペイン作成（NUM_ASHIGARU + 1（家老）ペイン）
 # ペイン番号は pane-base-index に依存（0 または 1）
-# 最初に3列に分割
-tmux split-window -h -t "multiagent:agents"
-tmux split-window -h -t "multiagent:agents"
+TOTAL_PANES=$((NUM_ASHIGARU + 1))  # 家老 + 足軽
 
-# 各列を3行に分割
-tmux select-pane -t "multiagent:agents.${PANE_BASE}"
-tmux split-window -v
-tmux split-window -v
-
-tmux select-pane -t "multiagent:agents.$((PANE_BASE+3))"
-tmux split-window -v
-tmux split-window -v
-
-tmux select-pane -t "multiagent:agents.$((PANE_BASE+6))"
-tmux split-window -v
-tmux split-window -v
-
-# ペインラベル設定（プロンプト用: モデル名なし）
-PANE_LABELS=("karo" "ashigaru1" "ashigaru2" "ashigaru3" "ashigaru4" "ashigaru5" "ashigaru6" "ashigaru7" "ashigaru8")
-# ペインタイトル設定（tmuxタイトル用: モデル名付き）
-if [ "$KESSEN_MODE" = true ]; then
-    PANE_TITLES=("karo(Opus)" "ashigaru1(Opus)" "ashigaru2(Opus)" "ashigaru3(Opus)" "ashigaru4(Opus)" "ashigaru5(Opus)" "ashigaru6(Opus)" "ashigaru7(Opus)" "ashigaru8(Opus)")
+# 必要なペイン数だけ作成
+if [ "$TOTAL_PANES" -eq 1 ]; then
+    # 1ペインのみ（家老のみ）- 何もしない
+    :
+elif [ "$TOTAL_PANES" -eq 2 ]; then
+    # 2ペイン: 横に1つ分割
+    tmux split-window -h -t "multiagent:agents"
+elif [ "$TOTAL_PANES" -ge 3 ] && [ "$TOTAL_PANES" -le 4 ]; then
+    # 3-4ペイン: 2x2グリッドベース
+    # 3ペインの場合も4ペイン作成してから調整
+    # ペイン配置（PANE_BASE=0の場合）:
+    #   [0(家老)] [2(足軽2)]
+    #   [1(足軽1)] [3(足軽3 or 空)]
+    tmux split-window -h -t "multiagent:agents"
+    tmux select-pane -t "multiagent:agents.${PANE_BASE}"
+    tmux split-window -v
+    tmux select-pane -t "multiagent:agents.$((PANE_BASE+2))"
+    tmux split-window -v
 else
-    PANE_TITLES=("karo(Opus)" "ashigaru1(Sonnet)" "ashigaru2(Sonnet)" "ashigaru3(Sonnet)" "ashigaru4(Sonnet)" "ashigaru5(Opus)" "ashigaru6(Opus)" "ashigaru7(Opus)" "ashigaru8(Opus)")
+    # 5ペイン以上: 3x3グリッド
+    tmux split-window -h -t "multiagent:agents"
+    tmux split-window -h -t "multiagent:agents"
+    
+    tmux select-pane -t "multiagent:agents.${PANE_BASE}"
+    tmux split-window -v
+    tmux split-window -v
+    
+    tmux select-pane -t "multiagent:agents.$((PANE_BASE+3))"
+    tmux split-window -v
+    tmux split-window -v
+    
+    tmux select-pane -t "multiagent:agents.$((PANE_BASE+6))"
+    tmux split-window -v
+    tmux split-window -v
 fi
-# 色設定（karo: 赤, ashigaru: 青）
-PANE_COLORS=("red" "blue" "blue" "blue" "blue" "blue" "blue" "blue" "blue")
 
-AGENT_IDS=("karo" "ashigaru1" "ashigaru2" "ashigaru3" "ashigaru4" "ashigaru5" "ashigaru6" "ashigaru7" "ashigaru8")
+# ペインラベル設定（動的生成）
+PANE_LABELS=("karo")
+PANE_TITLES=()
+PANE_COLORS=("red")
+AGENT_IDS=("karo")
+MODEL_NAMES=()
 
-# モデル名設定（pane-border-format で常時表示するため）
-if [ "$KESSEN_MODE" = true ]; then
-    MODEL_NAMES=("Opus Thinking" "Opus Thinking" "Opus Thinking" "Opus Thinking" "Opus Thinking" "Opus Thinking" "Opus Thinking" "Opus Thinking" "Opus Thinking")
+# 家老のモデル名とタイトル
+if [ "$BACKEND" = "gemini" ]; then
+    PANE_TITLES+=("karo(gemini-3-pro-preview)")
+    MODEL_NAMES+=("gemini-3-pro-preview")
 else
-    MODEL_NAMES=("Opus Thinking" "Sonnet Thinking" "Sonnet Thinking" "Sonnet Thinking" "Sonnet Thinking" "Opus Thinking" "Opus Thinking" "Opus Thinking" "Opus Thinking")
+    PANE_TITLES+=("karo(Opus)")
+    MODEL_NAMES+=("Opus Thinking")
 fi
 
-for i in {0..8}; do
+# 足軽のラベル・タイトル・色を動的生成
+for i in $(seq 1 $NUM_ASHIGARU); do
+    PANE_LABELS+=("ashigaru${i}")
+    PANE_COLORS+=("blue")
+    AGENT_IDS+=("ashigaru${i}")
+    
+    if [ "$BACKEND" = "gemini" ]; then
+        PANE_TITLES+=("ashigaru${i}(gemini-3-flash-preview)")
+        MODEL_NAMES+=("gemini-3-flash-preview")
+    elif [ "$KESSEN_MODE" = true ]; then
+        PANE_TITLES+=("ashigaru${i}(Opus)")
+        MODEL_NAMES+=("Opus Thinking")
+    else
+        if [ $i -le 4 ]; then
+            PANE_TITLES+=("ashigaru${i}(Sonnet)")
+            MODEL_NAMES+=("Sonnet Thinking")
+        else
+            PANE_TITLES+=("ashigaru${i}(Opus)")
+            MODEL_NAMES+=("Opus Thinking")
+        fi
+    fi
+done
+
+# 各ペインに設定を適用
+for i in $(seq 0 $NUM_ASHIGARU); do
     p=$((PANE_BASE + i))
     tmux select-pane -t "multiagent:agents.${p}" -T "${PANE_TITLES[$i]}"
     tmux set-option -p -t "multiagent:agents.${p}" @agent_id "${AGENT_IDS[$i]}"
@@ -545,21 +599,9 @@ echo ""
 # ═══════════════════════════════════════════════════════════════════════════════
 if [ "$SETUP_ONLY" = false ]; then
 
-    # バックエンド設定を読み込み
-    BACKEND="claude"
-    if [ -f "./config/settings.yaml" ]; then
-        BACKEND=$(grep "^backend:" ./config/settings.yaml 2>/dev/null | awk '{print $2}' || echo "claude")
-    fi
     log_info "バックエンド: $BACKEND"
-
-    # 足軽数を読み込み（バックエンド別）
-    if [ "$BACKEND" = "gemini" ]; then
-        NUM_ASHIGARU=$(grep -A10 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "num_ashigaru:" | awk '{print $2}' || echo "3")
-    else
-        NUM_ASHIGARU=$(grep -A10 "^claude:" ./config/settings.yaml 2>/dev/null | grep "num_ashigaru:" | awk '{print $2}' || echo "8")
-    fi
-    NUM_ASHIGARU=${NUM_ASHIGARU:-8}
     log_info "足軽数: $NUM_ASHIGARU"
+    log_war "⚔️ 家老・足軽の陣を構築中（$((NUM_ASHIGARU + 1))名配備）..."
 
     # CLI コマンドの存在チェック
     if [ "$BACKEND" = "gemini" ]; then
