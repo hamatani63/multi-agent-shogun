@@ -246,6 +246,18 @@ fi
 NUM_ASHIGARU=${NUM_ASHIGARU:-8}
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# STEP 0.5: バックエンド別 .gitignore 生成
+# ═══════════════════════════════════════════════════════════════════════════════
+if [ -f "./.gitignore.base" ] && [ -f "./.gitignore.${BACKEND}" ]; then
+    log_info "📜 .gitignore を生成中（${BACKEND}版）..."
+    cat ./.gitignore.base ./.gitignore.${BACKEND} > ./.gitignore
+    log_info "  └─ .gitignore.base + .gitignore.${BACKEND} → .gitignore"
+else
+    log_info "⚠️  .gitignore テンプレートが見つかりません（既存の.gitignoreを使用）"
+fi
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # STEP 1: 既存セッションクリーンアップ
 # ═══════════════════════════════════════════════════════════════════════════════
 log_info "🧹 既存の陣を撤収中..."
