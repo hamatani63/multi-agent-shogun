@@ -1,16 +1,16 @@
+﻿# ===========================================
+# .gitignore.base - 蜈ｱ騾夐Κ蛻・ｼ医さ繝溘ャ繝亥ｯｾ雎｡・・
 # ===========================================
-# .gitignore.base - 共通部分（コミット対象）
-# ===========================================
-# このファイルは起動スクリプトによって
-# .gitignore.{backend} と結合され .gitignore が生成される
+# 縺薙・繝輔ぃ繧､繝ｫ縺ｯ襍ｷ蜍輔せ繧ｯ繝ｪ繝励ヨ縺ｫ繧医▲縺ｦ
+# .gitignore.{backend} 縺ｨ邨仙粋縺輔ｌ .gitignore 縺檎函謌舌＆繧後ｋ
 #
-# 注意: 生成された .gitignore 自体はトラックしない
-# テンプレートファイルのみコミットする:
-#   - .gitignore.base (このファイル)
+# 豕ｨ諢・ 逕滓・縺輔ｌ縺・.gitignore 閾ｪ菴薙・繝医Λ繝・け縺励↑縺・
+# 繝・Φ繝励Ξ繝ｼ繝医ヵ繧｡繧､繝ｫ縺ｮ縺ｿ繧ｳ繝溘ャ繝医☆繧・
+#   - .gitignore.base (縺薙・繝輔ぃ繧､繝ｫ)
 #   - .gitignore.gemini
 #   - .gitignore.claude
 
-# 生成された .gitignore（テンプレートから自動生成されるため）
+# 逕滓・縺輔ｌ縺・.gitignore・医ユ繝ｳ繝励Ξ繝ｼ繝医°繧芽・蜍慕函謌舌＆繧後ｋ縺溘ａ・・
 .gitignore
 
 # Order file (internal use only)
@@ -56,11 +56,15 @@ projects/
 # Internal docs (operation logs, test plans, article drafts)
 docs/
 archive/
-# ===========================================
-# .gitignore.gemini - Gemini CLI用追加パターン
-# ===========================================
-# Gemini CLIはqueue/やdashboard.mdにアクセスする必要があるため
-# これらは除外パターンに含めない
 
-# (このファイルは意図的に空に近い)
-# queue/, dashboard.md 等はGemini CLIがアクセスするため除外しない
+# Queue (task management, local to each installation)
+queue/
+dashboard.md
+# ===========================================
+# .gitignore.gemini - Gemini CLI逕ｨ霑ｽ蜉繝代ち繝ｼ繝ｳ
+# ===========================================
+# Gemini CLI縺ｯqueue/繧・ashboard.md縺ｫ繧｢繧ｯ繧ｻ繧ｹ縺吶ｋ蠢・ｦ√′縺ゅｋ縺溘ａ
+# 縺薙ｌ繧峨・髯､螟悶ヱ繧ｿ繝ｼ繝ｳ縺ｫ蜷ｫ繧√↑縺・
+
+# (縺薙・繝輔ぃ繧､繝ｫ縺ｯ諢丞峙逧・↓遨ｺ縺ｫ霑代＞)
+# queue/, dashboard.md 遲峨・Gemini CLI縺後い繧ｯ繧ｻ繧ｹ縺吶ｋ縺溘ａ髯､螟悶＠縺ｪ縺・

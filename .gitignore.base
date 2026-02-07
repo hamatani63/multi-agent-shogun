@@ -56,3 +56,7 @@ projects/
 # Internal docs (operation logs, test plans, article drafts)
 docs/
 archive/
+
+# Queue (task management, local to each installation)
+queue/
+dashboard.md
