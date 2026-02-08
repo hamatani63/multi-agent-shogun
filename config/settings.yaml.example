@@ -1,0 +1,49 @@
+# multi-agent-shogun 設定ファイル
+# このファイルを config/settings.yaml にコピーして使用します
+# コピー後、環境に合わせてパス等を修正してください
+
+# バックエンド設定
+# claude: Claude Code CLI
+# gemini: Gemini CLI
+backend: gemini
+
+# 言語設定
+# ja: 日本語（戦国風日本語のみ、併記なし）
+# en: 英語（戦国風日本語 + 英訳併記）
+# その他の言語コード（es, zh, ko, fr, de 等）も対応
+language: ja
+
+# シェル設定
+# bash: bash用プロンプト（デフォルト）
+# zsh: zsh用プロンプト
+shell: bash
+
+# スキル設定
+skill:
+  # スキル保存先（スキル名に shogun- プレフィックスを付けて保存）
+  save_path: "~/.gemini/skills/"
+
+  # ローカルスキル保存先（このプロジェクト専用）
+  # Windows (WSL) の場合の例: /mnt/c/Users/Username/...
+  # Mac/Linux の場合: /Users/Username/...
+  local_path: "./skills/"
+
+# ログ設定
+logging:
+  level: info  # debug | info | warn | error
+  path: "./logs/"
+
+# Gemini CLI設定
+gemini:
+  # 足軽の数（Gemini版はデフォルト3体）
+  num_ashigaru: 3
+  
+  # 強モデル足軽の数（1-num_ashigaru）
+  # 例: strong_ashigaru_count=1 なら足軽1のみ強モデル、足軽2-3は高速モデル
+  strong_ashigaru_count: 1
+  
+  # モデル設定
+  model_shogun: "gemini-3-flash-preview"
+  model_karo: "gemini-3-flash-preview"
+  model_ashigaru_strong: "gemini-3-pro-preview"
+  model_ashigaru_fast: "gemini-3-flash-preview"

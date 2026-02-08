@@ -34,7 +34,7 @@ Memory MCPには、コンパクションを超えて永続化すべきルール�
 1. **自分のIDを確認**: `tmux display-message -t "$TMUX_PANE" -p '#{@agent_id}'`
    - `shogun` → 将軍
    - `karo` → 家老
-   - `ashigaru1` ～ `ashigaru8` → 足軽1～8
+   - `ashigaru1` ～ `ashigaru{N}` → 足軽1～N（Nは`config/settings.yaml`の`gemini.num_ashigaru`で設定。デフォルト3）
 2. **対応する instructions を読む**:
    - 将軍 → instructions/shogun.md
    - 家老 → instructions/karo.md
@@ -142,34 +142,51 @@ Layer 4: Session（揮発・コンテキスト内）
 └──────┬───────┘
        │ YAMLファイル経由
        ▼
-┌───┬───┬───┬───┬───┬───┬───┬───┐
-│A1 │A2 │A3 │A4 │A5 │A6 │A7 │A8 │ ← 足軽（実働部隊）
-└───┴───┴───┴───┴───┴───┴───┴───┘
+┌───┬───┬───┐
+│A1 │A2 │A3 │ ← 足軽（実働部隊、Gemini版: 3体、Claude版: 8体）
+└───┴───┴───┘
 ```
 
 ## ファイル操作の鉄則（全エージェント必須）
 
 - **WriteやEditの前に必ずReadせよ。** Gemini CLIは未読ファイルへのWrite/Editを拒否することがある。Read→Write/Edit を1セットとして実行すること。
 
+### 🚨 here-document（<< EOF）を使うな！
+
+Gemini CLIで`cat << EOF`形式のhere-documentを使うと構文エラーになる。
+代わりにGemini CLIのWriteFileツールを使え。
+
+```bash
+# ❌ 禁止（構文エラーになる）
+cat > somefile.yaml << EOF
+content
+EOF
+
+# ✅ 推奨（WriteFileツールを使用）
+# Gemini CLIにファイル書き込みを依頼する形式
+```
+
 ## 通信プロトコル
 
 ### イベント駆動通信（YAML + send-keys）
 - ポーリング禁止（API代金節約のため）
 - 指示・報告内容はYAMLファイルに書く
-- 通知は tmux send-keys で相手を起こす（必ず Enter を使用、C-m 禁止）
-- **send-keys は必ず2回のBash呼び出しに分けよ**（1回で書くとEnterが正しく解釈されない）：
+- 通知は tmux send-keys で相手を起こす（**三段撃ちの法**）
+- **send-keys は「三段撃ち」で行え**：
   ```bash
-  # 【1回目】メッセージを送る
+  # 1. メッセージ送信
   tmux send-keys -t multiagent:0.0 'メッセージ内容'
-  # 【2回目】Enterを送る
-  tmux send-keys -t multiagent:0.0 Enter
+  # 2. 確定（一の弾）
+  sleep 1 && tmux send-keys -t multiagent:0.0 C-m
+  # 3. 実行（二の弾）
+  sleep 1 && tmux send-keys -t multiagent:0.0 C-m
   ```
 
 ### 報告の流れ（割り込み防止設計）
 - **足軽→家老**: 報告YAML記入 + send-keys で家老を起こす（**必須**）
-- **家老→将軍/殿**: dashboard.md 更新のみ（send-keys **禁止**）
+- **家老→将軍/殿**: dashboard.md 更新に加え、メイン任務完了時は [報告] プレフィックスを付けて send-keys で報告（**狼煙プロトコル**）
 - **上→下への指示**: YAML + send-keys で起こす
-- 理由: 殿（人間）の入力中に割り込みが発生するのを防ぐ。足軽→家老は同じtmuxセッション内のため割り込みリスクなし
+- 理由: 報告の遅滞を防ぎつつ、[報告] プレフィックスにより殿（人間）の入力との区別を明確にする。
 
 ### ファイル構成
 ```
@@ -337,3 +354,66 @@ Gemini CLIでは、MCPツールは `~/.gemini/settings.json` で設定される�
 ```bash
 cat config/settings.yaml | grep "^backend:"
 ```
+
+---
+
+## Git管理とファイルアクセス
+
+### 設計方針
+
+`queue/`, `dashboard.md`, `config/settings.yaml`, `status/` はローカル作業用ファイルのため、Git管理対象外とする。
+
+> **重要**: Gemini CLIは `.gitignore` を参照してファイルアクセスを制限する。
+> `.geminiignore` で `!` プレフィックスを使い、Gemini CLIがアクセスする必要があるファイルを明示的に許可する。
+
+### ファイル構成
+
+| ファイル | 説明 | Git管理 |
+|---------|------|---------|
+| `.gitignore.base` | 共通パターン（ランタイムファイルを除く） | ✅ コミット対象 |
+| `.gitignore.gemini` | Gemini用追加パターン | ✅ コミット対象 |
+| `.gitignore.claude` | Claude用追加パターン | ✅ コミット対象 |
+| `.gitignore` | 起動時に自動生成 | ❌ 自動生成・無視 |
+| `.geminiignore` | Gemini CLI用アクセス許可設定 | ✅ コミット対象 |
+| `.git/info/exclude` | ローカル除外設定（ランタイムファイル） | ❌ ローカルのみ |
+
+### .geminiignore の設定
+
+Gemini CLIは `.gitignore` のパターンでファイルアクセスを制限する。
+`.geminiignore` で `!` プレフィックスを使い、アクセスを許可する：
+
+```
+# .gitignoreで除外されているが、Gemini CLIがアクセスする必要があるファイルを許可
+!queue/
+!queue/**
+!dashboard.md
+!config/settings.yaml
+!config/projects.yaml
+!status/
+!status/**
+!.gitignore
+```
+
+### 起動時の動作
+
+1. バックエンドを検出（`config/settings.yaml`）
+2. `.gitignore.base` + `.gitignore.{backend}` → `.gitignore` を生成
+3. `.git/info/exclude` を設定（ランタイムファイルをGitから除外）
+
+### 動作の仕組み
+
+```
+【Gemini CLI】
+  ↓ .gitignore + .geminiignore を参照
+  ↓ .geminiignore の ! パターンでランタイムファイルへのアクセスを許可 ✅
+
+【Git】
+  ↓ .gitignore + .git/info/exclude を参照
+  ↓ ランタイムファイルは .git/info/exclude で除外 → コミット対象外 ✅
+```
+
+### 注意事項
+
+- `.geminiignore` の変更後はGemini CLIの再起動が必要
+- `.git/info/exclude` はローカル設定（リポジトリにコミットされない）
+- 起動スクリプト実行時に自動設定される

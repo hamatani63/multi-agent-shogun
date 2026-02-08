@@ -206,16 +206,21 @@ tmux send-keys -t multiagent:0.1 'メッセージ' Enter  # ダメ
 **なぜダメか**: 1回で 'メッセージ' Enter と書くと、tmuxがEnterをメッセージの一部として
 解釈する場合がある。確実にEnterを送るために**必ず2回のBash呼び出しに分けよ**。
 
-### ✅ 正しい方法（2回に分ける）
+### ✅ 正しい方法（三段撃ちの法）
 
-**【1回目】**
+**【1回目】** メッセージ送信：
 ```bash
 tmux send-keys -t multiagent:0.{N} 'queue/tasks/ashigaru{N}.yaml に任務がある。確認して実行せよ。'
 ```
 
-**【2回目】**
+**【2回目】** 確定（一の弾）：
 ```bash
-tmux send-keys -t multiagent:0.{N} Enter
+sleep 1 && tmux send-keys -t multiagent:0.{N} C-m
+```
+
+**【3回目】** 実行（二の弾）：
+```bash
+sleep 1 && tmux send-keys -t multiagent:0.{N} C-m
 ```
 
 ### ⚠️ 複数足軽への連続送信（2秒間隔）

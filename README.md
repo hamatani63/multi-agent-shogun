@@ -4,7 +4,7 @@
 
 **Command your AI army like a feudal warlord.**
 
-Run 8 AI agents in parallel — orchestrated through a samurai-inspired hierarchy with zero coordination overhead.
+Run 3-8 AI agents in parallel — orchestrated through a samurai-inspired hierarchy with zero coordination overhead.
 
 **Now supports both Claude Code CLI and Gemini CLI!**
 
@@ -22,7 +22,7 @@ Run 8 AI agents in parallel — orchestrated through a samurai-inspired hierarch
   <img src="assets/screenshots/tmux_multiagent_9panes.png" alt="multi-agent-shogun: 9 panes running in parallel" width="800">
 </p>
 
-<p align="center"><i>One Karo (manager) coordinating 8 Ashigaru (workers) — real session, no mock data.</i></p>
+<p align="center"><i>One Karo (manager) coordinating 3-8 Ashigaru (workers) — real session, no mock data.</i></p>
 
 ---
 
@@ -37,7 +37,7 @@ Most multi-agent frameworks burn API tokens on coordination. Shogun doesn't.
 | | Claude Code `Task` tool | LangGraph | CrewAI | **multi-agent-shogun** |
 |---|---|---|---|---|
 | **Architecture** | Subagents inside one process | Graph-based state machine | Role-based agents | Feudal hierarchy via tmux |
-| **Parallelism** | Sequential (one at a time) | Parallel nodes (v0.2+) | Limited | **8 independent agents** |
+| **Parallelism** | Sequential (one at a time) | Parallel nodes (v0.2+) | Limited | **3-8 independent agents** |
 | **Coordination cost** | API calls per Task | API + infra (Postgres/Redis) | API + CrewAI platform | **Zero** (YAML + tmux) |
 | **Observability** | Claude logs only | LangSmith integration | OpenTelemetry | **Live tmux panes** + dashboard |
 | **Skill discovery** | None | None | None | **Bottom-up auto-proposal** |
@@ -45,7 +45,7 @@ Most multi-agent frameworks burn API tokens on coordination. Shogun doesn't.
 
 ### What makes this different
 
-**Zero coordination overhead** — Agents talk through YAML files on disk. The only API calls are for actual work, not orchestration. Run 8 agents and pay only for 8 agents' work.
+**Zero coordination overhead** — Agents talk through YAML files on disk. The only API calls are for actual work, not orchestration. Run 3 agents and pay only for 3 agents' work.
 
 **Full transparency** — Every agent runs in a visible tmux pane. Every instruction, report, and decision is a plain YAML file you can read, diff, and version-control. No black boxes.
 
@@ -87,18 +87,16 @@ Skills grow organically from real work — not from a predefined template librar
       ┌─────────────┐
       │   SHOGUN    │  Receives your command, plans strategy
       │    (将軍)    │  Session: shogun
-      └──────┬──────┘
-             │  YAML + send-keys
       ┌──────▼──────┐
       │    KARO     │  Breaks tasks down, assigns to workers
       │    (家老)    │  Session: multiagent, pane 0
       └──────┬──────┘
              │  YAML + send-keys
-    ┌─┬─┬─┬─┴─┬─┬─┬─┐
-    │1│2│3│4│5│6│7│8│  Execute in parallel
-    └─┴─┴─┴─┴─┴─┴─┴─┘
+    ┌───┬──┴──┬───┐
+    │ 1 │  2  │ 3 │  Execute in parallel
+    └───┴─────┴───┘
          ASHIGARU (足軽)
-         Panes 1-8
+         Panes 1-3
 ```
 
 **Communication protocol:**
@@ -278,7 +276,7 @@ projects:
     status: active
 ```
 
-**Research sprints** — 8 agents research different topics in parallel, results compiled in minutes.
+**Research sprints** — multiple agents research different topics in parallel, results compiled in minutes.
 
 **Multi-project management** — Switch between client projects without losing context. Memory MCP preserves preferences across sessions.
 
@@ -305,7 +303,9 @@ language: en   # Samurai Japanese + English translation
 | Ashigaru 1–4 | Sonnet | Enabled |
 | Ashigaru 5–8 | Opus | Enabled |
 
-### MCP servers
+### MCP servers (Setup Guide)
+
+#### Claude Code CLI
 
 ```bash
 # Memory (auto-configured by first_setup.sh)
@@ -320,6 +320,41 @@ claude mcp add github -e GITHUB_PERSONAL_ACCESS_TOKEN=your_pat -- npx -y @modelc
 # Playwright (browser automation)
 claude mcp add playwright -- npx @playwright/mcp@latest
 ```
+
+#### Gemini CLI
+
+For Gemini CLI, edit `~/.gemini/settings.json` directly to add MCP servers.
+
+```json
+{
+  "mcpServers": {
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "env": {
+        "MEMORY_FILE_PATH": "/absolute/path/to/multi-agent-shogun/memory/shogun_memory.jsonl"
+      }
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "your_token_here"
+      }
+    },
+    "notion": {
+      "command": "npx",
+      "args": ["-y", "@notionhq/notion-mcp-server"],
+      "env": {
+        "NOTION_TOKEN": "your_token_here"
+      }
+    }
+  }
+}
+```
+
+After saving the file, restart the Gemini CLI for changes to take effect.
+
 
 ### Screenshot integration
 
@@ -390,7 +425,7 @@ multi-agent-shogun/
 │
 ├── instructions/              # Agent behavior definitions
 │   ├── shogun.md
-│   ├── karo.md
+│   ├── karo_gemini.md
 │   └── ashigaru.md
 │
 ├── config/
@@ -399,8 +434,8 @@ multi-agent-shogun/
 │
 ├── queue/                     # Communication (source of truth)
 │   ├── shogun_to_karo.yaml
-│   ├── tasks/ashigaru{1-8}.yaml
-│   └── reports/ashigaru{1-8}_report.yaml
+│   ├── tasks/ashigaru{1-N}.yaml
+│   └── reports/ashigaru{1-N}_report.yaml
 │
 ├── memory/                    # Memory MCP persistent storage
 ├── dashboard.md               # Human-readable status board

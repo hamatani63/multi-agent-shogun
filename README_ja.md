@@ -1,16 +1,18 @@
-# multi-agent-shogun
+# multi-agent-shogun Gemini CLI対応版
 
 <div align="center">
 
-**Claude Code / Gemini CLI マルチエージェント統率システム**
+```markdown
+**Gemini CLI / Claude Code マルチエージェント統率システム**
+```
 
-*コマンド1つで、8体のAIエージェントが並列稼働*
+*コマンド1つで、3−8体のAIエージェントが並列稼働*
 
-**Claude Code CLI と Gemini CLI の両方に対応！**
+**Gemini CLI と Claude Code CLI の両方に対応！**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Claude Code](https://img.shields.io/badge/Claude-Code-blueviolet)](https://claude.ai)
 [![Gemini CLI](https://img.shields.io/badge/Gemini-CLI-blue)](https://github.com/google-gemini/gemini-cli)
+[![Claude Code](https://img.shields.io/badge/Claude-Code-blueviolet)](https://claude.ai)
 [![tmux](https://img.shields.io/badge/tmux-required-green)](https://github.com/tmux/tmux)
 
 [English](README.md) | [日本語](README_ja.md)
@@ -24,7 +26,7 @@
 **multi-agent-shogun** は、複数の Claude Code インスタンスを同時に実行し、戦国時代の軍制のように統率するシステムです。
 
 **なぜ使うのか？**
-- 1つの命令で、8体のAIワーカーが並列で実行
+- 1つの命令で、3体のAIワーカーが並列で実行
 - 待ち時間なし - タスクがバックグラウンドで実行中も次の命令を出せる
 - AIがセッションを跨いであなたの好みを記憶（Memory MCP）
 - ダッシュボードでリアルタイム進捗確認
@@ -41,10 +43,10 @@
     │    KARO     │  ← タスクをワーカーに分配
     └──────┬──────┘
            │
-  ┌─┬─┬─┬─┴─┬─┬─┬─┐
-  │1│2│3│4│5│6│7│8│  ← 8体のワーカーが並列実行
-  └─┴─┴─┴─┴─┴─┴─┴─┘
-      ASHIGARU
+    ┌───┬──┴──┬───┐
+    │ 1 │  2  │ 3 │  ← 3体のワーカーが並列実行
+    └───┴─────┴───┘
+        ASHIGARU
 ```
 
 ---
@@ -64,9 +66,11 @@
 
 📥 **リポジトリをダウンロード**
 
-[ZIPダウンロード](https://github.com/yohey-w/multi-agent-shogun/archive/refs/heads/main.zip) して `C:\tools\multi-agent-shogun` に展開
+```markdown
+[ZIPダウンロード](https://github.com/hamatani63/multi-agent-shogun/archive/refs/heads/main.zip) して `C:\tools\multi-agent-shogun` に展開
 
-*または git を使用:* `git clone https://github.com/yohey-w/multi-agent-shogun.git C:\tools\multi-agent-shogun`
+*または git を使用:* `git clone https://github.com/hamatani63/multi-agent-shogun.git C:\tools\multi-agent-shogun`
+```
 
 </td>
 </tr>
@@ -175,7 +179,7 @@ cd /mnt/c/tools/multi-agent-shogun
 
 ```bash
 # 1. リポジトリをクローン
-git clone https://github.com/yohey-w/multi-agent-shogun.git ~/multi-agent-shogun
+git clone https://github.com/hamatani63/multi-agent-shogun.git ~/multi-agent-shogun
 cd ~/multi-agent-shogun
 
 # 2. スクリプトに実行権限を付与
@@ -545,6 +549,8 @@ MCPサーバはClaudeに外部ツールへのアクセスを提供します：
 
 ### MCPサーバのインストール
 
+#### Claude Code CLI
+
 以下のコマンドでMCPサーバを追加：
 
 ```bash
@@ -567,13 +573,44 @@ claude mcp add sequential-thinking -- npx -y @modelcontextprotocol/server-sequen
 claude mcp add memory -e MEMORY_FILE_PATH="$PWD/memory/shogun_memory.jsonl" -- npx -y @modelcontextprotocol/server-memory
 ```
 
+#### Gemini CLI
+
+Gemini CLIでは、設定ファイル `~/.gemini/settings.json` を直接編集してMCPサーバーを追加します。
+
+```json
+{
+  "mcpServers": {
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "env": {
+        "MEMORY_FILE_PATH": "/absolute/path/to/multi-agent-shogun/memory/shogun_memory.jsonl"
+      }
+    },
+    // 他のMCPサーバーも同様に追加
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "your_token_here"
+      }
+    }
+  }
+}
+```
+
+設定ファイルを保存した後、Gemini CLIを再起動すると反映されます。
+
 ### インストール確認
 
+**Claude Code CLI:**
 ```bash
 claude mcp list
 ```
 
-全サーバが「Connected」ステータスで表示されるはずです。
+**Gemini CLI:**
+設定ファイルが正しく読み込まれていれば、使用時にツールとして表示されます。
+
 
 ---
 
@@ -613,13 +650,37 @@ claude mcp list
 
 ## ⚙️ 設定
 
-### 言語設定
+### 設定ファイルの作成（初回のみ）
 
-`config/settings.yaml` を編集：
+`config/settings.yaml` でシステムの動作を設定します。
+このファイルはGit管理外のため、あなたの環境に合わせて自由に編集できます。
+
+初回起動時に `config/settings.yaml.example` から自動的に作成されます。
+手動で作成する場合：
+
+```bash
+cp config/settings.yaml.example config/settings.yaml
+```
+
+### 主な設定項目
+
+`config/settings.yaml` を編集して変更します：
+
+#### 1. 言語設定
 
 ```yaml
 language: ja   # 日本語のみ
-language: en   # 日本語 + 英訳併記
+# language: en   # 日本語 + 英訳併記
+```
+
+#### 2. バックエンド切替
+
+```yaml
+# Claude バックエンド（デフォルト）
+# backend: claude
+
+# Gemini バックエンド
+backend: gemini
 ```
 
 ---
@@ -666,8 +727,6 @@ gemini:
 - **レート制限**: Google OAuth無料枠には日次制限あり。足軽数を3人に減らすと安定
 - **モデル切替**: クォータ枯渇時は別モデルに切替可能（例: `gemini-3-flash-preview`）
 - **起動プロンプト**: Geminiには委譲ルールを明示的に伝える必要あり
-
-詳細は [docs/08_gemini_cli_implementation_plan.md](docs/08_gemini_cli_implementation_plan.md) を参照。
 
 ---
 
@@ -804,7 +863,7 @@ multi-agent-shogun/
 │
 ├── instructions/             # エージェント指示書
 │   ├── shogun.md             # 将軍の指示書
-│   ├── karo.md               # 家老の指示書
+│   ├── karo_gemini.md        # 家老の指示書
 │   └── ashigaru.md           # 足軽の指示書
 │
 ├── config/
@@ -961,7 +1020,9 @@ tmux respawn-pane -t shogun:0.0 -k 'claude --model opus --dangerously-skip-permi
 
 ## 🙏 クレジット
 
-[Claude-Code-Communication](https://github.com/Akira-Papa/Claude-Code-Communication) by Akira-Papa をベースに開発。
+```markdown
+本プロジェクトは [multi-agent-shogun](https://github.com/yohey-w/multi-agent-shogun) をフォークし、[Claude-Code-Communication](https://github.com/Akira-Papa/Claude-Code-Communication) by Akira-Papa をベースに開発されています。
+```
 
 ---
 

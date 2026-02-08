@@ -1,0 +1,12 @@
+# ===========================================
+# .gitignore.claude - Claude CLI用追加パターン
+# ===========================================
+# Claude CLIは.gitignoreを尊重しないため、
+# 通常通りランタイムファイルを除外できる
+
+# Runtime data (generated during operation)
+queue/research/
+queue/tasks/
+queue/reports/
+queue/*.yaml
+dashboard.md

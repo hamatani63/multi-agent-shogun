@@ -1,0 +1,18 @@
+# .geminiignore - Gemini CLI用除外パターン
+#
+# Gemini CLIはデフォルトで.gitignoreを参照してファイルをフィルタリングします。
+# このファイルで追加の除外パターンを指定するか、
+# 除外を無効化（!パターン）することができます。
+#
+# 重要: Gemini CLIがアクセスする必要があるファイルは
+# ここで明示的に許可する必要があります。
+
+# .gitignoreで除外されているが、Gemini CLIがアクセスする必要があるファイルを許可
+!queue/
+!queue/**
+!dashboard.md
+!config/settings.yaml
+!config/projects.yaml
+!status/
+!status/**
+!.gitignore
