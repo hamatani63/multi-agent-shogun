@@ -451,7 +451,7 @@ Gemini CLIでは、**レート制限**と**応答速度**を考慮した構成�
 | エージェント | モデル | 役割 | 理由 |
 |-------------|--------|----------|------|
 | **将軍** | Flash | 指揮官 | 高速な応答とコンテキスト処理能力（1Mトークン） |
-| **家老** | Flash | 管理者 | タスク分配と進捗管理の高速化 |
+| **家老** | **Pro** | 管理者 | タスク分配と進捗管理（強モデル） |
 | **足軽1** | **Pro** | 主力 | 複雑な推論やコーディングを担当（強モデル） |
 | **足軽2-3** | Flash | 遊撃 | 調査や単純作業を高速に処理（高速モデル） |
 
@@ -570,30 +570,6 @@ MCPサーバはClaudeに外部ツールへのアクセスを提供します：
 
 ### MCPサーバのインストール
 
-#### Claude Code CLI
-
-以下のコマンドでMCPサーバを追加：
-
-```bash
-# 1. Notion - Notionワークスペースに接続
-claude mcp add notion -e NOTION_TOKEN=your_token_here -- npx -y @notionhq/notion-mcp-server
-
-# 2. Playwright - ブラウザ自動化
-claude mcp add playwright -- npx @playwright/mcp@latest
-# 注意: 先に `npx playwright install chromium` を実行してください
-
-# 3. GitHub - リポジトリ操作
-claude mcp add github -e GITHUB_PERSONAL_ACCESS_TOKEN=your_pat_here -- npx -y @modelcontextprotocol/server-github
-
-# 4. Sequential Thinking - 複雑な問題を段階的に思考
-claude mcp add sequential-thinking -- npx -y @modelcontextprotocol/server-sequential-thinking
-
-# 5. Memory - セッション間の長期記憶（推奨！）
-# ✅ first_setup.sh で自動設定済み
-# 手動で再設定する場合:
-claude mcp add memory -e MEMORY_FILE_PATH="$PWD/memory/shogun_memory.jsonl" -- npx -y @modelcontextprotocol/server-memory
-```
-
 #### Gemini CLI
 
 Gemini CLIでは、設定ファイル `~/.gemini/settings.json` を直接編集してMCPサーバーを追加します。
@@ -622,6 +598,30 @@ Gemini CLIでは、設定ファイル `~/.gemini/settings.json` を直接編集�
 
 設定ファイルを保存した後、Gemini CLIを再起動すると反映されます。
 
+#### Claude Code CLI
+
+以下のコマンドでMCPサーバを追加：
+
+```bash
+# 1. Notion - Notionワークスペースに接続
+claude mcp add notion -e NOTION_TOKEN=your_token_here -- npx -y @notionhq/notion-mcp-server
+
+# 2. Playwright - ブラウザ自動化
+claude mcp add playwright -- npx @playwright/mcp@latest
+# 注意: 先に `npx playwright install chromium` を実行してください
+
+# 3. GitHub - リポジトリ操作
+claude mcp add github -e GITHUB_PERSONAL_ACCESS_TOKEN=your_pat_here -- npx -y @modelcontextprotocol/server-github
+
+# 4. Sequential Thinking - 複雑な問題を段階的に思考
+claude mcp add sequential-thinking -- npx -y @modelcontextprotocol/server-sequential-thinking
+
+# 5. Memory - セッション間の長期記憶（推奨！）
+# ✅ first_setup.sh で自動設定済み
+# 手動で再設定する場合:
+claude mcp add memory -e MEMORY_FILE_PATH="$PWD/memory/shogun_memory.jsonl" -- npx -y @modelcontextprotocol/server-memory
+```
+
 ### インストール確認
 
 **Claude Code CLI:**
@@ -631,7 +631,6 @@ claude mcp list
 
 **Gemini CLI:**
 設定ファイルが正しく読み込まれていれば、使用時にツールとして表示されます。
-
 
 ---
 
@@ -727,8 +726,8 @@ backend: gemini
 ```yaml
 gemini:
   model_shogun: gemini-3-flash-preview
-  model_karo: gemini-3-flash-preview
-  model_ashigaru_strong: gemini-3-flash-preview
+  model_karo: gemini-3-pro-preview
+  model_ashigaru_strong: gemini-3-pro-preview
   model_ashigaru_fast: gemini-3-flash-preview
   num_ashigaru: 3  # レート制限対策で8→3に削減
   auth_method: oauth

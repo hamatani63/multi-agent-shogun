@@ -423,8 +423,8 @@ backend: gemini
 ```yaml
 gemini:
   model_shogun: gemini-3-flash-preview
-  model_karo: gemini-3-flash-preview
-  model_ashigaru_strong: gemini-3-flash-preview
+  model_karo: gemini-3-pro-preview
+  model_ashigaru_strong: gemini-3-pro-preview
   model_ashigaru_fast: gemini-3-flash-preview
   num_ashigaru: 3  # Reduced from 8 to avoid rate limits
   auth_method: oauth
