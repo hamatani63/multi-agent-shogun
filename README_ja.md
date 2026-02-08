@@ -1,10 +1,8 @@
-# multi-agent-shogun Gemini CLI対応版
+# multi-agent-shogun (Gemini CLI対応版)
 
 <div align="center">
 
-```markdown
 **Gemini CLI / Claude Code マルチエージェント統率システム**
-```
 
 *コマンド1つで、3−8体のAIエージェントが並列稼働*
 

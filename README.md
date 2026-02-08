@@ -1,12 +1,12 @@
 <div align="center">
 
-# multi-agent-shogun
+# multi-agent-shogun (Gemini CLI Support)
 
 **Command your AI army like a feudal warlord.**
 
 Run 3-8 AI agents in parallel — orchestrated through a samurai-inspired hierarchy with zero coordination overhead.
 
-**Now supports both Claude Code CLI and Gemini CLI!**
+**Now supports both Gemini CLI and Claude Code CLI!**
 
 [![GitHub Stars](https://img.shields.io/github/stars/yohey-w/multi-agent-shogun?style=social)](https://github.com/yohey-w/multi-agent-shogun)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -17,10 +17,6 @@ Run 3-8 AI agents in parallel — orchestrated through a samurai-inspired hierar
 [English](README.md) | [日本語](README_ja.md)
 
 </div>
-
-<p align="center">
-  <img src="assets/screenshots/tmux_multiagent_9panes.png" alt="multi-agent-shogun: 9 panes running in parallel" width="800">
-</p>
 
 <p align="center"><i>One Karo (manager) coordinating 3-8 Ashigaru (workers) — real session, no mock data.</i></p>
 
