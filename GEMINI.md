@@ -361,34 +361,59 @@ cat config/settings.yaml | grep "^backend:"
 
 ### 設計方針
 
-`queue/` や `dashboard.md` はローカル作業用ファイルのため、Git管理対象外とする。
+`queue/`, `dashboard.md`, `config/settings.yaml`, `status/` はローカル作業用ファイルのため、Git管理対象外とする。
 
-> **重要**: Gemini CLIのファイルアクセスは `.gitignore` とは**無関係**。
-> Gemini CLIは `trustedFolders` 設定でアクセス制御を行う。
-> したがって `.gitignore` に `queue/` を含めても、Gemini CLIからのアクセスに影響しない。
+> **重要**: Gemini CLIは `.gitignore` を参照してファイルアクセスを制限する。
+> `.geminiignore` で `!` プレフィックスを使い、Gemini CLIがアクセスする必要があるファイルを明示的に許可する。
 
 ### ファイル構成
 
 | ファイル | 説明 | Git管理 |
 |---------|------|---------|
-| `.gitignore.base` | 共通パターン（queue/含む） | ✅ コミット対象 |
+| `.gitignore.base` | 共通パターン（ランタイムファイルを除く） | ✅ コミット対象 |
 | `.gitignore.gemini` | Gemini用追加パターン | ✅ コミット対象 |
 | `.gitignore.claude` | Claude用追加パターン | ✅ コミット対象 |
 | `.gitignore` | 起動時に自動生成 | ❌ 自動生成・無視 |
+| `.geminiignore` | Gemini CLI用アクセス許可設定 | ✅ コミット対象 |
+| `.git/info/exclude` | ローカル除外設定（ランタイムファイル） | ❌ ローカルのみ |
+
+### .geminiignore の設定
+
+Gemini CLIは `.gitignore` のパターンでファイルアクセスを制限する。
+`.geminiignore` で `!` プレフィックスを使い、アクセスを許可する：
+
+```
+# .gitignoreで除外されているが、Gemini CLIがアクセスする必要があるファイルを許可
+!queue/
+!queue/**
+!dashboard.md
+!config/settings.yaml
+!config/projects.yaml
+!status/
+!status/**
+!.gitignore
+```
 
 ### 起動時の動作
 
 1. バックエンドを検出（`config/settings.yaml`）
 2. `.gitignore.base` + `.gitignore.{backend}` → `.gitignore` を生成
+3. `.git/info/exclude` を設定（ランタイムファイルをGitから除外）
 
 ### 動作の仕組み
 
 ```
-【Git】
-  ↓ .gitignore を参照
-  ↓ queue/, dashboard.md は除外パターンに含まれる → コミット対象外 ✅
-
 【Gemini CLI】
-  ↓ trustedFolders 設定でアクセス制御
-  ↓ リポジトリが信頼済みなら queue/ にもアクセス可能 ✅
+  ↓ .gitignore + .geminiignore を参照
+  ↓ .geminiignore の ! パターンでランタイムファイルへのアクセスを許可 ✅
+
+【Git】
+  ↓ .gitignore + .git/info/exclude を参照
+  ↓ ランタイムファイルは .git/info/exclude で除外 → コミット対象外 ✅
 ```
+
+### 注意事項
+
+- `.geminiignore` の変更後はGemini CLIの再起動が必要
+- `.git/info/exclude` はローカル設定（リポジトリにコミットされない）
+- 起動スクリプト実行時に自動設定される
