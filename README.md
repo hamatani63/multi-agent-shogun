@@ -411,10 +411,10 @@ multi-agent-shogun now supports **Gemini CLI** as an alternative backend to Clau
 Edit `config/settings.yaml`:
 
 ```yaml
-# Claude backend (default)
-backend: claude
+# Claude backend
+# backend: claude
 
-# Gemini backend
+# Gemini backend (default)
 backend: gemini
 ```
 
