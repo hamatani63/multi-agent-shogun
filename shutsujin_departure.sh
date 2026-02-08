@@ -239,7 +239,7 @@ fi
 
 # 足軽数を読み込み（バックエンド別）
 if [ "$BACKEND" = "gemini" ]; then
-    NUM_ASHIGARU=$(grep -A10 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "num_ashigaru:" | awk '{print $2}' || echo "3")
+    NUM_ASHIGARU=$(grep -A20 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "num_ashigaru:" | awk '{print $2}' || echo "3")
 else
     NUM_ASHIGARU=$(grep -A10 "^claude:" ./config/settings.yaml 2>/dev/null | grep "num_ashigaru:" | awk '{print $2}' || echo "8")
 fi
@@ -276,8 +276,12 @@ queue/research/
 
 # Dashboard
 dashboard.md
+
+# Config and status
+config/settings.yaml
+status/
 EXCLUDE_EOF
-    log_info "  └─ queue/, dashboard.md をGitから除外（Gemini CLIアクセス許可）"
+    log_info "  └─ queue/, dashboard.md, config/settings.yaml, status/ をGitから除外（Gemini CLIアクセス許可）"
 fi
 
 
@@ -583,7 +587,7 @@ MODEL_NAMES=()
 
 # 家老のモデル名とタイトル
 if [ "$BACKEND" = "gemini" ]; then
-    KARO_MODEL=$(grep -A10 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "model_karo:" | awk '{print $2}' || echo "gemini-3-pro-preview")
+    KARO_MODEL=$(grep -A20 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "model_karo:" | awk '{print $2}' || echo "gemini-3-pro-preview")
     PANE_TITLES+=("karo($KARO_MODEL)")
     MODEL_NAMES+=("$KARO_MODEL")
 else
@@ -599,11 +603,11 @@ for i in $(seq 1 $NUM_ASHIGARU); do
     
     if [ "$BACKEND" = "gemini" ]; then
         # Gemini版: strong_ashigaru_countに応じてモデル切り替え
-        STRONG_COUNT=$(grep -A10 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "strong_ashigaru_count:" | awk '{print $2}' || echo "1")
+        STRONG_COUNT=$(grep -A20 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "strong_ashigaru_count:" | awk '{print $2}' || echo "1")
         if [ $i -le $STRONG_COUNT ]; then
-            ASHIGARU_MODEL=$(grep -A10 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "model_ashigaru_strong:" | awk '{print $2}' || echo "gemini-3-pro-preview")
+            ASHIGARU_MODEL=$(grep -A20 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "model_ashigaru_strong:" | awk '{print $2}' || echo "gemini-3-pro-preview")
         else
-            ASHIGARU_MODEL=$(grep -A10 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "model_ashigaru_fast:" | awk '{print $2}' || echo "gemini-3-flash-preview")
+            ASHIGARU_MODEL=$(grep -A20 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "model_ashigaru_fast:" | awk '{print $2}' || echo "gemini-3-flash-preview")
         fi
         PANE_TITLES+=("ashigaru${i}($ASHIGARU_MODEL)")
         MODEL_NAMES+=("$ASHIGARU_MODEL")
@@ -676,19 +680,19 @@ if [ "$SETUP_ONLY" = false ]; then
             # Gemini CLI - settings.yamlからモデル名を読み込み
             case $role in
                 shogun)
-                    MODEL=$(grep -A10 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "model_shogun:" | awk '{print $2}' || echo "gemini-3-pro-preview")
+                    MODEL=$(grep -A20 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "model_shogun:" | awk '{print $2}' || echo "gemini-3-pro-preview")
                     echo "gemini --model $MODEL --yolo"
                     ;;
                 karo)
-                    MODEL=$(grep -A10 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "model_karo:" | awk '{print $2}' || echo "gemini-3-pro-preview")
+                    MODEL=$(grep -A20 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "model_karo:" | awk '{print $2}' || echo "gemini-3-pro-preview")
                     echo "gemini --model $MODEL --yolo"
                     ;;
                 ashigaru_strong)
-                    MODEL=$(grep -A10 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "model_ashigaru_strong:" | awk '{print $2}' || echo "gemini-3-pro-preview")
+                    MODEL=$(grep -A20 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "model_ashigaru_strong:" | awk '{print $2}' || echo "gemini-3-pro-preview")
                     echo "gemini --model $MODEL --yolo"
                     ;;
                 ashigaru_fast)
-                    MODEL=$(grep -A10 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "model_ashigaru_fast:" | awk '{print $2}' || echo "gemini-3-flash-preview")
+                    MODEL=$(grep -A20 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "model_ashigaru_fast:" | awk '{print $2}' || echo "gemini-3-flash-preview")
                     echo "gemini --model $MODEL --yolo"
                     ;;
             esac
@@ -739,7 +743,7 @@ if [ "$SETUP_ONLY" = false ]; then
     else
         # 平時の陣: モデル切り替え対応
         if [ "$BACKEND" = "gemini" ]; then
-            STRONG_COUNT=$(grep -A10 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "strong_ashigaru_count:" | awk '{print $2}' || echo "1")
+            STRONG_COUNT=$(grep -A20 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "strong_ashigaru_count:" | awk '{print $2}' || echo "1")
             for i in $(seq 1 $NUM_ASHIGARU); do
                 p=$((PANE_BASE + i))
                 if [ $i -le $STRONG_COUNT ]; then
