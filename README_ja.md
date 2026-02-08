@@ -51,7 +51,7 @@
 
 ## 🚀 クイックスタート
 
-### 🪟 Windowsユーザー（最も一般的）
+### Windowsユーザー（最も一般的）
 
 <table>
 <tr>
@@ -128,6 +128,7 @@ cd /mnt/c/tools/multi-agent-shogun
 ```bash
 cd /mnt/c/tools/multi-agent-shogun
 ./shutsujin_departure.sh
+tmux attach-session -t shogun      # 将軍に接続して命令を出す
 ```
 
 ### 📱 スマホからアクセス（どこからでも指揮）
@@ -161,7 +162,7 @@ cd /mnt/c/tools/multi-agent-shogun
 4. ＋ボタンで新しいウィンドウを開いて、部下の様子も見る：
    ```sh
    ssh あなたのユーザー名@あなたのTailscale IP
-   csm    # 家老+足軽の9ペインが広がる
+   csm    # 家老+足軽の4ペインが広がる
    ```
 
 **切り方：** Termuxのウィンドウをスワイプで閉じるだけ。tmuxセッションは生き残る。AI部下は黙々と作業を続けている。
@@ -192,6 +193,7 @@ chmod +x *.sh
 ```bash
 cd ~/multi-agent-shogun
 ./shutsujin_departure.sh
+tmux attach-session -t shogun      # 将軍に接続して命令を出す
 ```
 
 </details>
@@ -442,23 +444,44 @@ screenshot:
 
 ### 🧠 モデル設定
 
-| エージェント | モデル | 思考モード | 理由 |
+### 🧠 モデル設定（Gemini版）
+
+Gemini CLIでは、**レート制限**と**応答速度**を考慮した構成になっています。
+
+| エージェント | モデル | 役割 | 理由 |
 |-------------|--------|----------|------|
-| 将軍 | Opus | 無効 | 委譲とダッシュボード更新に深い推論は不要 |
-| 家老 | Opus | 有効 | タスク分配には慎重な判断が必要 |
-| 足軽1-4 | Sonnet | 有効 | コスト効率重視の標準タスク向け |
-| 足軽5-8 | Opus | 有効 | 複雑なタスク向けのフル機能 |
+| **将軍** | Flash | 指揮官 | 高速な応答とコンテキスト処理能力（1Mトークン） |
+| **家老** | **Pro** | 管理者 | タスク分配と進捗管理（強モデル） |
+| **足軽1** | **Pro** | 主力 | 複雑な推論やコーディングを担当（強モデル） |
+| **足軽2-3** | Flash | 遊撃 | 調査や単純作業を高速に処理（高速モデル） |
 
-将軍は `MAX_THINKING_TOKENS=0` で拡張思考を無効化し、高レベルな判断にはOpusの能力を維持しつつ、レイテンシとコストを削減。
+※ モデル名は `config/settings.yaml` でカスタマイズ可能（例: `gemini-3-pro-preview` 等）
 
-#### 陣形モード
+#### 陣形モード（Gemini版）
 
-| 陣形 | 足軽1-4 | 足軽5-8 | コマンド |
+| 陣形 | 足軽1 | 足軽2-3 | コマンド |
 |------|---------|---------|---------|
-| **平時の陣**（デフォルト） | Sonnet Thinking | Opus Thinking | `./shutsujin_departure.sh` |
-| **決戦の陣**（全力） | Opus Thinking | Opus Thinking | `./shutsujin_departure.sh -k` |
+| **平時の陣**（デフォルト） | **Pro** | Flash | `./shutsujin_departure.sh` |
+| **決戦の陣**（全力） | **Pro** | **Pro** | `./shutsujin_departure.sh -k` |
 
-平時は半数を安いSonnetモデルで運用。ここぞという時に `-k`（`--kessen`）で全軍Opusの「決戦の陣」に切り替え。家老の判断で `/model opus` を送れば、個別の足軽を一時昇格させることも可能。
+- **平時の陣**: 日常業務向け。足軽1のみProモデルを使用してコストと速度のバランスを取る
+- **決戦の陣**: 難易度の高いタスク向け。全足軽がProモデルとなり、最大火力で制圧する
+
+---
+
+### 🧠 モデル設定（Claude版）
+
+| エージェント | モデル | 思考モード |
+|-------------|--------|----------|
+| 将軍 | Opus | 無効 |
+| 家老 | Opus | 有効 |
+| 足軽1-4 | Sonnet | 有効 |
+| 足軽5-8 | Opus | 有効 |
+
+#### 陣形モード（Claude版）
+
+- **平時の陣**: 足軽半数がSonnet、半数がOpus
+- **決戦の陣**: 全足軽がOpus（`-k` オプション）
 
 ---
 
@@ -547,30 +570,6 @@ MCPサーバはClaudeに外部ツールへのアクセスを提供します：
 
 ### MCPサーバのインストール
 
-#### Claude Code CLI
-
-以下のコマンドでMCPサーバを追加：
-
-```bash
-# 1. Notion - Notionワークスペースに接続
-claude mcp add notion -e NOTION_TOKEN=your_token_here -- npx -y @notionhq/notion-mcp-server
-
-# 2. Playwright - ブラウザ自動化
-claude mcp add playwright -- npx @playwright/mcp@latest
-# 注意: 先に `npx playwright install chromium` を実行してください
-
-# 3. GitHub - リポジトリ操作
-claude mcp add github -e GITHUB_PERSONAL_ACCESS_TOKEN=your_pat_here -- npx -y @modelcontextprotocol/server-github
-
-# 4. Sequential Thinking - 複雑な問題を段階的に思考
-claude mcp add sequential-thinking -- npx -y @modelcontextprotocol/server-sequential-thinking
-
-# 5. Memory - セッション間の長期記憶（推奨！）
-# ✅ first_setup.sh で自動設定済み
-# 手動で再設定する場合:
-claude mcp add memory -e MEMORY_FILE_PATH="$PWD/memory/shogun_memory.jsonl" -- npx -y @modelcontextprotocol/server-memory
-```
-
 #### Gemini CLI
 
 Gemini CLIでは、設定ファイル `~/.gemini/settings.json` を直接編集してMCPサーバーを追加します。
@@ -599,6 +598,30 @@ Gemini CLIでは、設定ファイル `~/.gemini/settings.json` を直接編集�
 
 設定ファイルを保存した後、Gemini CLIを再起動すると反映されます。
 
+#### Claude Code CLI
+
+以下のコマンドでMCPサーバを追加：
+
+```bash
+# 1. Notion - Notionワークスペースに接続
+claude mcp add notion -e NOTION_TOKEN=your_token_here -- npx -y @notionhq/notion-mcp-server
+
+# 2. Playwright - ブラウザ自動化
+claude mcp add playwright -- npx @playwright/mcp@latest
+# 注意: 先に `npx playwright install chromium` を実行してください
+
+# 3. GitHub - リポジトリ操作
+claude mcp add github -e GITHUB_PERSONAL_ACCESS_TOKEN=your_pat_here -- npx -y @modelcontextprotocol/server-github
+
+# 4. Sequential Thinking - 複雑な問題を段階的に思考
+claude mcp add sequential-thinking -- npx -y @modelcontextprotocol/server-sequential-thinking
+
+# 5. Memory - セッション間の長期記憶（推奨！）
+# ✅ first_setup.sh で自動設定済み
+# 手動で再設定する場合:
+claude mcp add memory -e MEMORY_FILE_PATH="$PWD/memory/shogun_memory.jsonl" -- npx -y @modelcontextprotocol/server-memory
+```
+
 ### インストール確認
 
 **Claude Code CLI:**
@@ -608,7 +631,6 @@ claude mcp list
 
 **Gemini CLI:**
 設定ファイルが正しく読み込まれていれば、使用時にツールとして表示されます。
-
 
 ---
 
@@ -704,8 +726,8 @@ backend: gemini
 ```yaml
 gemini:
   model_shogun: gemini-3-flash-preview
-  model_karo: gemini-3-flash-preview
-  model_ashigaru_strong: gemini-3-flash-preview
+  model_karo: gemini-3-pro-preview
+  model_ashigaru_strong: gemini-3-pro-preview
   model_ashigaru_fast: gemini-3-flash-preview
   num_ashigaru: 3  # レート制限対策で8→3に削減
   auth_method: oauth
