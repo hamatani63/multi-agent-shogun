@@ -10,8 +10,8 @@ Run 3-8 AI agents in parallel — orchestrated through a samurai-inspired hierar
 
 [![GitHub Stars](https://img.shields.io/github/stars/yohey-w/multi-agent-shogun?style=social)](https://github.com/yohey-w/multi-agent-shogun)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Claude Code](https://img.shields.io/badge/Built_for-Claude_Code-blueviolet)](https://code.claude.com)
 [![Gemini CLI](https://img.shields.io/badge/Supports-Gemini_CLI-blue)](https://github.com/google-gemini/gemini-cli)
+[![Claude Code](https://img.shields.io/badge/Built_for-Claude_Code-blueviolet)](https://code.claude.com)
 [![Shell](https://img.shields.io/badge/Shell%2FBash-100%25-green)]()
 
 [English](README.md) | [日本語](README_ja.md)
@@ -137,7 +137,7 @@ The Karo can also promote individual Ashigaru mid-session with `/model opus` whe
 
 ```bash
 # 1. Clone
-git clone https://github.com/yohey-w/multi-agent-shogun.git C:\tools\multi-agent-shogun
+git clone https://github.com/hamatani63/multi-agent-shogun.git C:\tools\multi-agent-shogun
 
 # 2. Run installer (right-click → Run as Administrator)
 #    → install.bat handles WSL2 + Ubuntu setup automatically
@@ -152,7 +152,7 @@ cd /mnt/c/tools/multi-agent-shogun
 
 ```bash
 # 1. Clone
-git clone https://github.com/yohey-w/multi-agent-shogun.git ~/multi-agent-shogun
+git clone https://github.com/hamatani63/multi-agent-shogun.git ~/multi-agent-shogun
 cd ~/multi-agent-shogun && chmod +x *.sh
 
 # 2. Setup + Deploy
@@ -290,32 +290,46 @@ language: ja   # Samurai Japanese only
 language: en   # Samurai Japanese + English translation
 ```
 
-### Model assignment
+### 🧠 Model Configuration (Gemini)
+
+The Gemini CLI configuration is designed for **rate limit efficiency** and **response speed**.
+
+| Agent | Model | Role | Reason |
+|-------|-------|------|--------|
+| **Shogun** | Flash | Commander | High speed & context handling (1M tokens) |
+| **Karo** | **Pro** | Manager | Critical task allocation & management |
+| **Ashigaru 1** | **Pro** | Main Force | Complex reasoning & coding (Strong Model) |
+| **Ashigaru 2-3** | Flash | Support | Fast research & simple tasks (Fast Model) |
+
+*Note: Model names can be customized in `config/settings.yaml` (e.g., `gemini-3-pro-preview`).*
+
+#### Formation Modes (Gemini)
+
+| Mode | Ashigaru 1 | Ashigaru 2-3 | Command |
+|------|------------|--------------|---------|
+| **Normal** (Default) | **Pro** | Flash | `./shutsujin_departure.sh` |
+| **Kessen** (Battle) | **Pro** | **Pro** | `./shutsujin_departure.sh -k` |
+
+- **Normal Formation**: For daily tasks. Ashigaru 1 uses Pro model for balance.
+- **Kessen Formation**: For difficult tasks. All Ashigaru use Pro model for maximum capability.
+
+---
+
+### 🧠 Model Configuration (Claude)
 
 | Agent | Default Model | Thinking |
 |-------|--------------|----------|
-| Shogun | Opus | Disabled (delegation doesn't need deep reasoning) |
+| Shogun | Opus | Disabled |
 | Karo | Opus | Enabled |
 | Ashigaru 1–4 | Sonnet | Enabled |
 | Ashigaru 5–8 | Opus | Enabled |
 
+#### Formation Modes (Claude)
+
+- **Normal**: Half Sonnet, Half Opus
+- **Kessen**: All Opus (`-k` option)
+
 ### MCP servers (Setup Guide)
-
-#### Claude Code CLI
-
-```bash
-# Memory (auto-configured by first_setup.sh)
-claude mcp add memory -e MEMORY_FILE_PATH="$PWD/memory/shogun_memory.jsonl" -- npx -y @modelcontextprotocol/server-memory
-
-# Notion
-claude mcp add notion -e NOTION_TOKEN=your_token -- npx -y @notionhq/notion-mcp-server
-
-# GitHub
-claude mcp add github -e GITHUB_PERSONAL_ACCESS_TOKEN=your_pat -- npx -y @modelcontextprotocol/server-github
-
-# Playwright (browser automation)
-claude mcp add playwright -- npx @playwright/mcp@latest
-```
 
 #### Gemini CLI
 
@@ -351,6 +365,21 @@ For Gemini CLI, edit `~/.gemini/settings.json` directly to add MCP servers.
 
 After saving the file, restart the Gemini CLI for changes to take effect.
 
+#### Claude Code CLI
+
+```bash
+# Memory (auto-configured by first_setup.sh)
+claude mcp add memory -e MEMORY_FILE_PATH="$PWD/memory/shogun_memory.jsonl" -- npx -y @modelcontextprotocol/server-memory
+
+# Notion
+claude mcp add notion -e NOTION_TOKEN=your_token -- npx -y @notionhq/notion-mcp-server
+
+# GitHub
+claude mcp add github -e GITHUB_PERSONAL_ACCESS_TOKEN=your_pat -- npx -y @modelcontextprotocol/server-github
+
+# Playwright (browser automation)
+claude mcp add playwright -- npx @playwright/mcp@latest
+```
 
 ### Screenshot integration
 
