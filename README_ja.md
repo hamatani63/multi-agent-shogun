@@ -613,13 +613,39 @@ claude mcp list
 
 ## ⚙️ 設定
 
-### 言語設定
+## ⚙️ 設定
 
-`config/settings.yaml` を編集：
+### 設定ファイルの作成（初回のみ）
+
+`config/settings.yaml` でシステムの動作を設定します。
+このファイルはGit管理外のため、あなたの環境に合わせて自由に編集できます。
+
+初回起動時に `config/settings.yaml.example` から自動的に作成されます。
+手動で作成する場合：
+
+```bash
+cp config/settings.yaml.example config/settings.yaml
+```
+
+### 主な設定項目
+
+`config/settings.yaml` を編集して変更します：
+
+#### 1. 言語設定
 
 ```yaml
 language: ja   # 日本語のみ
-language: en   # 日本語 + 英訳併記
+# language: en   # 日本語 + 英訳併記
+```
+
+#### 2. バックエンド切替
+
+```yaml
+# Claude バックエンド（デフォルト）
+# backend: claude
+
+# Gemini バックエンド
+backend: gemini
 ```
 
 ---

@@ -14,6 +14,13 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
+# 設定ファイルが存在しない場合、exampleから作成
+if [ ! -f "./config/settings.yaml" ] && [ -f "./config/settings.yaml.example" ]; then
+    echo "⚠️ config/settings.yaml が見つかりません。デフォルト設定を作成します..."
+    cp ./config/settings.yaml.example ./config/settings.yaml
+    echo "✅ config/settings.yaml を作成しました（デフォルト: Gemini backend）。"
+fi
+
 # 言語設定を読み取り（デフォルト: ja）
 LANG_SETTING="ja"
 if [ -f "./config/settings.yaml" ]; then
