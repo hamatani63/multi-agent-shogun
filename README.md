@@ -117,6 +117,15 @@ After `/clear`, an agent recovers in **~2,000 tokens** by reading Memory MCP + i
 
 Agents can be deployed in different **formations** (陣形 / *jindate*) depending on the task:
 
+### Gemini Formations (Total 3 Agents)
+
+| Formation | Ashigaru 1 | Ashigaru 2-3 | Best for |
+|-----------|------------|--------------|----------|
+| **Normal** (default) | **Pro** | Flash | Default — balance cost & capability |
+| **Battle** (`-k` flag) | **Pro** | **Pro** | Critical tasks — all Pro models |
+
+### Claude Formations (Total 8 Agents)
+
 | Formation | Ashigaru 1–4 | Ashigaru 5–8 | Best for |
 |-----------|-------------|-------------|----------|
 | **Normal** (default) | Sonnet | Opus | Everyday tasks — cost-efficient |
@@ -124,7 +133,7 @@ Agents can be deployed in different **formations** (陣形 / *jindate*) dependin
 
 ```bash
 ./shutsujin_departure.sh          # Normal formation
-./shutsujin_departure.sh -k       # Battle formation (all Opus)
+./shutsujin_departure.sh -k       # Battle formation (kessen)
 ```
 
 The Karo can also promote individual Ashigaru mid-session with `/model opus` when a specific task demands it.
