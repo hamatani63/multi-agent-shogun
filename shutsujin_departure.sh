@@ -347,12 +347,25 @@ fi
 [ -d ./queue/tasks ] || mkdir -p ./queue/tasks
 
 # inbox はLinux FSにシンボリックリンク（WSL2の/mnt/c/ではinotifywaitが動かないため）
-INBOX_LINUX_DIR="$HOME/.local/share/multi-agent-shogun/inbox"
-if [ ! -L ./queue/inbox ]; then
-    mkdir -p "$INBOX_LINUX_DIR"
-    [ -d ./queue/inbox ] && cp ./queue/inbox/*.yaml "$INBOX_LINUX_DIR/" 2>/dev/null && rm -rf ./queue/inbox
-    ln -sf "$INBOX_LINUX_DIR" ./queue/inbox
-    log_info "  └─ inbox → Linux FS ($INBOX_LINUX_DIR) にシンボリックリンク作成"
+# inbox はLinux FSにシンボリックリンク（WSL2の/mnt/c/ではinotifywaitが動かないため）
+# ただし Gemini CLI (macOS/Native) の場合はシンボリックリンク不可（ワークスペース外アクセス禁止）
+if [ "$BACKEND" = "gemini" ]; then
+    if [ -L ./queue/inbox ]; then
+        rm ./queue/inbox
+        mkdir -p ./queue/inbox
+        log_info "  └─ inbox をローカルディレクトリに戻しました（Gemini用）"
+    elif [ ! -d ./queue/inbox ]; then
+        mkdir -p ./queue/inbox
+        log_info "  └─ inbox ディレクトリ作成（Gemini用）"
+    fi
+else
+    INBOX_LINUX_DIR="$HOME/.local/share/multi-agent-shogun/inbox"
+    if [ ! -L ./queue/inbox ]; then
+        mkdir -p "$INBOX_LINUX_DIR"
+        [ -d ./queue/inbox ] && cp ./queue/inbox/*.yaml "$INBOX_LINUX_DIR/" 2>/dev/null && rm -rf ./queue/inbox
+        ln -sf "$INBOX_LINUX_DIR" ./queue/inbox
+        log_info "  └─ inbox → Linux FS ($INBOX_LINUX_DIR) にシンボリックリンク作成"
+    fi
 fi
 
 if [ "$CLEAN_MODE" = true ]; then
@@ -713,6 +726,25 @@ done
 
 log_success "  └─ Inbox Watchers 起動完了"
 
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# STEP 5.6: ntfy Listener 起動 (Optional)
+# ═══════════════════════════════════════════════════════════════════════════════
+NTFY_TOPIC=$(grep 'ntfy_topic:' "./config/settings.yaml" | awk '{print $2}' | tr -d '"' || echo "")
+
+if [ -n "$NTFY_TOPIC" ]; then
+    log_info "📱 ntfy Listener を起動中 (topic: $NTFY_TOPIC)..."
+    
+    # 既存プロセスkill
+    pkill -f "ntfy_listener.sh" 2>/dev/null || true
+    
+    nohup bash "$SCRIPT_DIR/scripts/ntfy_listener.sh" \
+        >> "$SCRIPT_DIR/logs/ntfy_listener.log" 2>&1 &
+        
+    log_success "  └─ ntfy Listener 起動完了"
+else
+    log_info "📱 ntfy Listener はスキップ (ntfy_topic 未設定)"
+fi
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # STEP 6: エージェント起動（-s オプション指定時はスキップ）

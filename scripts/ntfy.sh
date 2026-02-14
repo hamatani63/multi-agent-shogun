@@ -21,5 +21,14 @@ while IFS= read -r line; do
     [ -n "$line" ] && AUTH_ARGS+=("$line")
 done < <(ntfy_get_auth_args "$SCRIPT_DIR/config/ntfy_auth.env")
 
+# Title argument (Optional)
+TITLE="${2:-}"
+
+# Build curl arguments
+CURL_ARGS=("-s" "${AUTH_ARGS[@]}" "-H" "Tags: outbound" "-d" "$1")
+if [ -n "$TITLE" ]; then
+    CURL_ARGS+=("-H" "Title: $TITLE")
+fi
+
 # shellcheck disable=SC2086
-curl -s "${AUTH_ARGS[@]}" -H "Tags: outbound" -d "$1" "https://ntfy.sh/$TOPIC" > /dev/null
+curl "${CURL_ARGS[@]}" "https://ntfy.sh/$TOPIC" > /dev/null

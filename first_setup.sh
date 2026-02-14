@@ -294,9 +294,22 @@ else
             HAS_ERROR=true
         fi
     else
-        log_error "apt-get が見つかりません。手動で python3-yaml をインストールしてください"
-        RESULTS+=("PyYAML: 未インストール (手動インストール必要)")
-        HAS_ERROR=true
+        # Try pip3 for macOS or non-Debian
+        if command -v pip3 &> /dev/null; then
+            log_info "pip3 install pyyaml を実行中..."
+            if pip3 install pyyaml; then
+                log_success "pip3 install pyyaml 完了"
+                RESULTS+=("PyYAML: インストール完了 (pip3)")
+            else
+                log_error "pip3 install pyyaml に失敗しました"
+                RESULTS+=("PyYAML: インストール失敗 (pip3)")
+                HAS_ERROR=true
+            fi
+        else
+            log_error "apt-get も pip3 も見つかりません。手動で python3-yaml をインストールしてください"
+            RESULTS+=("PyYAML: 未インストール (手動インストール必要)")
+            HAS_ERROR=true
+        fi
     fi
 fi
 
@@ -343,6 +356,31 @@ else
         else
             log_error "apt-get が見つかりません。手動で inotify-tools をインストールしてください"
             RESULTS+=("inotify-tools: 未インストール (手動インストール必要)")
+            HAS_ERROR=true
+        fi
+    fi
+fi
+
+# --- flock (macOS) ---
+if [ "$(uname -s)" = "Darwin" ]; then
+    if command -v flock &> /dev/null; then
+        log_success "flock がインストール済みです"
+        RESULTS+=("flock: OK")
+    else
+        log_warn "flock がインストールされていません"
+        if command -v brew &> /dev/null; then
+            log_info "flock (util-linux / flock) をインストール中..."
+            if brew install flock; then
+                log_success "flock インストール完了"
+                RESULTS+=("flock: インストール完了")
+            else
+                log_error "flock のインストールに失敗しました"
+                RESULTS+=("flock: インストール失敗")
+                HAS_ERROR=true
+            fi
+        else
+            log_error "Homebrew が見つかりません。手動で flock をインストールしてください"
+            RESULTS+=("flock: 未インストール (手動インストール必要)")
             HAS_ERROR=true
         fi
     fi
