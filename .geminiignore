@@ -18,3 +18,5 @@
 !.gitignore
 !memory/
 !memory/**
+!saytask/
+!saytask/**
