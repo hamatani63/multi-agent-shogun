@@ -102,44 +102,32 @@ else
 
     # Ubuntu/Debian系かチェック
     if command -v apt-get &> /dev/null; then
-        if [ ! -t 0 ]; then
-            REPLY="Y"
-        else
-            read -p "  tmux をインストールしますか? [Y/n]: " REPLY
+        log_info "tmux をインストール中..."
+        if ! sudo -n apt-get update -qq 2>/dev/null; then
+            if ! sudo apt-get update -qq 2>/dev/null; then
+                log_error "sudo の実行に失敗しました。ターミナルから直接実行してください"
+                RESULTS+=("tmux: インストール失敗 (sudo失敗)")
+                HAS_ERROR=true
+            fi
         fi
-        REPLY=${REPLY:-Y}
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            log_info "tmux をインストール中..."
-            if ! sudo -n apt-get update -qq 2>/dev/null; then
-                if ! sudo apt-get update -qq 2>/dev/null; then
-                    log_error "sudo の実行に失敗しました。ターミナルから直接実行してください"
-                    RESULTS+=("tmux: インストール失敗 (sudo失敗)")
+
+        if [ "$HAS_ERROR" != true ]; then
+            if ! sudo -n apt-get install -y tmux 2>/dev/null; then
+                if ! sudo apt-get install -y tmux 2>/dev/null; then
+                    log_error "tmux のインストールに失敗しました"
+                    RESULTS+=("tmux: インストール失敗")
                     HAS_ERROR=true
                 fi
             fi
+        fi
 
-            if [ "$HAS_ERROR" != true ]; then
-                if ! sudo -n apt-get install -y tmux 2>/dev/null; then
-                    if ! sudo apt-get install -y tmux 2>/dev/null; then
-                        log_error "tmux のインストールに失敗しました"
-                        RESULTS+=("tmux: インストール失敗")
-                        HAS_ERROR=true
-                    fi
-                fi
-            fi
-
-            if command -v tmux &> /dev/null; then
-                TMUX_VERSION=$(tmux -V | awk '{print $2}')
-                log_success "tmux インストール完了 (v$TMUX_VERSION)"
-                RESULTS+=("tmux: インストール完了 (v$TMUX_VERSION)")
-            else
-                log_error "tmux のインストールに失敗しました"
-                RESULTS+=("tmux: インストール失敗")
-                HAS_ERROR=true
-            fi
+        if command -v tmux &> /dev/null; then
+            TMUX_VERSION=$(tmux -V | awk '{print $2}')
+            log_success "tmux インストール完了 (v$TMUX_VERSION)"
+            RESULTS+=("tmux: インストール完了 (v$TMUX_VERSION)")
         else
-            log_warn "tmux のインストールをスキップしました"
-            RESULTS+=("tmux: 未インストール (スキップ)")
+            log_error "tmux のインストールに失敗しました"
+            RESULTS+=("tmux: インストール失敗")
             HAS_ERROR=true
         fi
     else
@@ -214,28 +202,10 @@ else
         \. "$NVM_DIR/nvm.sh"
     else
         # nvm 自動インストール
-        if [ ! -t 0 ]; then
-            REPLY="Y"
-        else
-            read -p "  Node.js (nvm経由) をインストールしますか? [Y/n]: " REPLY
-        fi
-        REPLY=${REPLY:-Y}
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            log_info "nvm をインストール中..."
-            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-        else
-            log_warn "Node.js のインストールをスキップしました"
-            echo ""
-            echo "  手動でインストールする場合:"
-            echo "    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash"
-            echo "    source ~/.bashrc"
-            echo "    nvm install 20"
-            echo ""
-            RESULTS+=("Node.js: 未インストール (スキップ)")
-            HAS_ERROR=true
-        fi
+        log_info "nvm をインストール中..."
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+        export NVM_DIR="$HOME/.nvm"
+        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
     fi
 
     # nvm が利用可能なら Node.js をインストール
@@ -277,50 +247,195 @@ else
 fi
 
 # ============================================================
-# STEP 5: Claude Code CLI チェック
+# STEP 4.5: Python3 / PyYAML / inotify-tools チェック
 # ============================================================
-log_step "STEP 5: Claude Code CLI チェック"
+log_step "STEP 4.5: Python3 / PyYAML / inotify-tools チェック"
 
-if command -v claude &> /dev/null; then
-    # バージョン取得を試みる
-    CLAUDE_VERSION=$(claude --version 2>/dev/null || echo "unknown")
-    log_success "Claude Code CLI がインストール済みです"
-    log_info "バージョン: $CLAUDE_VERSION"
-    RESULTS+=("Claude Code CLI: OK")
+# --- python3 ---
+if command -v python3 &> /dev/null; then
+    PY3_VERSION=$(python3 --version 2>&1)
+    log_success "python3 がインストール済みです ($PY3_VERSION)"
+    RESULTS+=("python3: OK ($PY3_VERSION)")
 else
-    log_warn "Claude Code CLI がインストールされていません"
-    echo ""
-
-    if command -v npm &> /dev/null; then
-        echo "  インストールコマンド:"
-        echo "     npm install -g @anthropic-ai/claude-code"
-        echo ""
-        if [ ! -t 0 ]; then
-            REPLY="Y"
+    log_warn "python3 がインストールされていません"
+    if command -v apt-get &> /dev/null; then
+        log_info "python3 をインストール中..."
+        sudo apt-get update -qq 2>/dev/null
+        if sudo apt-get install -y python3 2>/dev/null; then
+            PY3_VERSION=$(python3 --version 2>&1)
+            log_success "python3 インストール完了 ($PY3_VERSION)"
+            RESULTS+=("python3: インストール完了 ($PY3_VERSION)")
         else
-            read -p "  今すぐインストールしますか? [Y/n]: " REPLY
-        fi
-        REPLY=${REPLY:-Y}
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            log_info "Claude Code CLI をインストール中..."
-            npm install -g @anthropic-ai/claude-code
-
-            if command -v claude &> /dev/null; then
-                log_success "Claude Code CLI インストール完了"
-                RESULTS+=("Claude Code CLI: インストール完了")
-            else
-                log_error "インストールに失敗しました。パスを確認してください"
-                RESULTS+=("Claude Code CLI: インストール失敗")
-                HAS_ERROR=true
-            fi
-        else
-            log_warn "インストールをスキップしました"
-            RESULTS+=("Claude Code CLI: 未インストール (スキップ)")
+            log_error "python3 のインストールに失敗しました"
+            RESULTS+=("python3: インストール失敗")
             HAS_ERROR=true
         fi
     else
-        echo "  npm がインストールされていないため、先に Node.js をインストールしてください"
-        RESULTS+=("Claude Code CLI: 未インストール (npm必要)")
+        log_error "apt-get が見つかりません。手動で python3 をインストールしてください"
+        RESULTS+=("python3: 未インストール (手動インストール必要)")
+        HAS_ERROR=true
+    fi
+fi
+
+# --- PyYAML (python3-yaml) ---
+if python3 -c "import yaml" 2>/dev/null; then
+    log_success "PyYAML がインストール済みです"
+    RESULTS+=("PyYAML: OK")
+else
+    log_warn "PyYAML がインストールされていません"
+    if command -v apt-get &> /dev/null; then
+        log_info "python3-yaml をインストール中..."
+        if sudo apt-get install -y python3-yaml 2>/dev/null; then
+            log_success "python3-yaml インストール完了"
+            RESULTS+=("PyYAML: インストール完了")
+        else
+            log_error "python3-yaml のインストールに失敗しました"
+            RESULTS+=("PyYAML: インストール失敗")
+            HAS_ERROR=true
+        fi
+    else
+        log_error "apt-get が見つかりません。手動で python3-yaml をインストールしてください"
+        RESULTS+=("PyYAML: 未インストール (手動インストール必要)")
+        HAS_ERROR=true
+    fi
+fi
+
+# --- inotify-tools (inotifywait) ---
+if command -v inotifywait &> /dev/null; then
+    log_success "inotify-tools がインストール済みです"
+    RESULTS+=("inotify-tools: OK")
+else
+    log_warn "inotify-tools がインストールされていません"
+    if command -v apt-get &> /dev/null; then
+        log_info "inotify-tools をインストール中..."
+        if sudo apt-get install -y inotify-tools 2>/dev/null; then
+            log_success "inotify-tools インストール完了"
+            RESULTS+=("inotify-tools: インストール完了")
+        else
+            log_error "inotify-tools のインストールに失敗しました"
+            RESULTS+=("inotify-tools: インストール失敗")
+            HAS_ERROR=true
+        fi
+    else
+        log_error "apt-get が見つかりません。手動で inotify-tools をインストールしてください"
+        RESULTS+=("inotify-tools: 未インストール (手動インストール必要)")
+        HAS_ERROR=true
+    fi
+fi
+
+# ============================================================
+# STEP 5: Claude Code CLI チェック（ネイティブ版）
+# ※ npm版は公式非推奨（deprecated）。ネイティブ版を使用する。
+#    Node.jsはMCPサーバー（npx経由）で引き続き必要。
+# ============================================================
+log_step "STEP 5: Claude Code CLI チェック"
+
+# ネイティブ版の既存インストールを検出するため、PATHに ~/.local/bin を含める
+export PATH="$HOME/.local/bin:$PATH"
+
+NEED_CLAUDE_INSTALL=false
+HAS_NPM_CLAUDE=false
+
+if command -v claude &> /dev/null; then
+    # claude コマンドは存在する → 実際に動くかチェック
+    CLAUDE_VERSION=$(claude --version 2>&1)
+    CLAUDE_PATH=$(which claude 2>/dev/null)
+
+    if [ $? -eq 0 ] && [ "$CLAUDE_VERSION" != "unknown" ] && [[ "$CLAUDE_VERSION" != *"not found"* ]]; then
+        # 動作する claude が見つかった → npm版かネイティブ版かを判定
+        if echo "$CLAUDE_PATH" | grep -qi "npm\|node_modules\|AppData"; then
+            # npm版が動いている
+            HAS_NPM_CLAUDE=true
+            log_warn "npm版 Claude Code CLI が検出されました（公式非推奨）"
+            log_info "検出パス: $CLAUDE_PATH"
+            log_info "バージョン: $CLAUDE_VERSION"
+            echo ""
+            echo "  npm版は公式で非推奨（deprecated）となっています。"
+            echo "  ネイティブ版をインストールし、npm版はアンインストールすることを推奨します。"
+            echo ""
+            if [ ! -t 0 ]; then
+                REPLY="Y"
+            else
+                read -p "  ネイティブ版をインストールしますか? [Y/n]: " REPLY
+            fi
+            REPLY=${REPLY:-Y}
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                NEED_CLAUDE_INSTALL=true
+                # npm版のアンインストール案内
+                echo ""
+                log_info "先にnpm版をアンインストールしてください:"
+                if echo "$CLAUDE_PATH" | grep -qi "mnt/c\|AppData"; then
+                    echo "  Windows の PowerShell で:"
+                    echo "    npm uninstall -g @anthropic-ai/claude-code"
+                else
+                    echo "    npm uninstall -g @anthropic-ai/claude-code"
+                fi
+                echo ""
+            else
+                log_warn "ネイティブ版への移行をスキップしました（npm版で続行）"
+                RESULTS+=("Claude Code CLI: OK (npm版・移行推奨)")
+            fi
+        else
+            # ネイティブ版が正常に動作している
+            log_success "Claude Code CLI がインストール済みです（ネイティブ版）"
+            log_info "バージョン: $CLAUDE_VERSION"
+            RESULTS+=("Claude Code CLI: OK")
+        fi
+    else
+        # command -v で見つかるが動かない（npm版でNode.js無し等）
+        log_warn "Claude Code CLI が見つかりましたが正常に動作しません"
+        log_info "検出パス: $CLAUDE_PATH"
+        if echo "$CLAUDE_PATH" | grep -qi "npm\|node_modules\|AppData"; then
+            HAS_NPM_CLAUDE=true
+            log_info "→ npm版（Node.js依存）が検出されました"
+        else
+            log_info "→ バージョン取得に失敗しました"
+        fi
+        NEED_CLAUDE_INSTALL=true
+    fi
+else
+    # claude コマンドが見つからない
+    NEED_CLAUDE_INSTALL=true
+fi
+
+if [ "$NEED_CLAUDE_INSTALL" = true ]; then
+    log_info "ネイティブ版 Claude Code CLI をインストールします"
+    log_info "Claude Code CLI をインストール中（ネイティブ版）..."
+    curl -fsSL https://claude.ai/install.sh | bash
+
+    # PATHを更新（インストール直後は反映されていない可能性）
+    export PATH="$HOME/.local/bin:$PATH"
+
+    # .bashrc に永続化（重複追加を防止）
+    if ! grep -q 'export PATH="\$HOME/.local/bin:\$PATH"' "$HOME/.bashrc" 2>/dev/null; then
+        echo '' >> "$HOME/.bashrc"
+        echo '# Claude Code CLI PATH (added by first_setup.sh)' >> "$HOME/.bashrc"
+        echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
+        log_info "~/.local/bin を ~/.bashrc の PATH に追加しました"
+    fi
+
+    if command -v claude &> /dev/null; then
+        CLAUDE_VERSION=$(claude --version 2>/dev/null || echo "unknown")
+        log_success "Claude Code CLI インストール完了（ネイティブ版）"
+        log_info "バージョン: $CLAUDE_VERSION"
+        RESULTS+=("Claude Code CLI: インストール完了")
+
+        # npm版が残っている場合の案内
+        if [ "$HAS_NPM_CLAUDE" = true ]; then
+            echo ""
+            log_info "ネイティブ版がPATHで優先されるため、npm版は無効化されます"
+            log_info "npm版を完全に削除するには以下を実行してください:"
+            if echo "$CLAUDE_PATH" | grep -qi "mnt/c\|AppData"; then
+                echo "  Windows の PowerShell で:"
+                echo "    npm uninstall -g @anthropic-ai/claude-code"
+            else
+                echo "    npm uninstall -g @anthropic-ai/claude-code"
+            fi
+        fi
+    else
+        log_error "インストールに失敗しました。パスを確認してください"
+        log_info "~/.local/bin がPATHに含まれているか確認してください"
+        RESULTS+=("Claude Code CLI: インストール失敗")
         HAS_ERROR=true
     fi
 fi
@@ -719,33 +834,35 @@ setup_gemini_mcp() {
     if command -v gemini &> /dev/null; then
         GEMINI_SETTINGS_DIR="${HOME}/.gemini"
         GEMINI_SETTINGS_FILE="${GEMINI_SETTINGS_DIR}/settings.json"
-        TEMPLATE_FILE="$SCRIPT_DIR/config/gemini_settings.json.template"
         
         # Gemini設定ディレクトリを作成
         mkdir -p "${GEMINI_SETTINGS_DIR}"
         
-        if [ -f "$GEMINI_SETTINGS_FILE" ]; then
-            # 既存の設定が存在する場合
-            if grep -q '"memory"' "$GEMINI_SETTINGS_FILE" 2>/dev/null; then
-                log_info "Gemini Memory MCP は既に設定済みです"
-                RESULTS+=("Gemini Memory MCP: OK (設定済み)")
-            else
-                log_warn "Gemini settings.json に Memory MCP を追加してください"
-                log_info "テンプレート: $TEMPLATE_FILE"
-                RESULTS+=("Gemini Memory MCP: 手動設定必要")
-            fi
+        if [ -f "$GEMINI_SETTINGS_FILE" ] && grep -q '"memory"' "$GEMINI_SETTINGS_FILE" 2>/dev/null; then
+            log_info "Gemini Memory MCP は既に設定済みです"
+            RESULTS+=("Gemini Memory MCP: OK (設定済み)")
         else
-            # テンプレートから設定ファイルを生成
-            if [ -f "$TEMPLATE_FILE" ]; then
-                log_info "Gemini Memory MCP を設定中..."
-                sed "s|\${PROJECT_ROOT}|${SCRIPT_DIR}|g" "$TEMPLATE_FILE" > "$GEMINI_SETTINGS_FILE"
-                log_success "Gemini Memory MCP 設定完了"
-                log_info "設定ファイル: $GEMINI_SETTINGS_FILE"
-                RESULTS+=("Gemini Memory MCP: 設定完了")
-            else
-                log_warn "テンプレートファイルが見つかりません: $TEMPLATE_FILE"
-                RESULTS+=("Gemini Memory MCP: 設定失敗 (テンプレートなし)")
+            log_info "Gemini Memory MCP を設定中..."
+            
+            # 簡易的に設定ファイルを作成/追記 (jq未依存)
+            # 既存ファイルがない場合は新規作成
+            if [ ! -f "$GEMINI_SETTINGS_FILE" ]; then
+                echo '{ "mcpServers": {} }' > "$GEMINI_SETTINGS_FILE"
             fi
+            
+            # 注意: ここでは完全なJSONパース・編集は難しいため、
+            # ユーザーに手動設定を促すか、テンプレートを表示する
+            log_warn "Gemini settings.json の自動編集はリスクがあるため、手動設定を推奨します"
+            log_info "以下の内容を ~/.gemini/settings.json に追加してください:"
+            echo '
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "env": {
+        "MEMORY_FILE_PATH": "'"$SCRIPT_DIR"'/memory/shogun_memory.jsonl"
+      }
+    }'
+            RESULTS+=("Gemini Memory MCP: 手動設定推奨")
         fi
     else
         log_warn "gemini コマンドが見つからないため Gemini Memory MCP 設定をスキップ"
@@ -773,7 +890,7 @@ echo ""
 for result in "${RESULTS[@]}"; do
     if [[ $result == *"未インストール"* ]] || [[ $result == *"失敗"* ]]; then
         echo -e "  ${RED}✗${NC} $result"
-    elif [[ $result == *"アップグレード"* ]] || [[ $result == *"スキップ"* ]]; then
+    elif [[ $result == *"アップグレード"* ]] || [[ $result == *"スキップ"* ]] || [[ $result == *"推奨"* ]]; then
         echo -e "  ${YELLOW}!${NC} $result"
     else
         echo -e "  ${GREEN}✓${NC} $result"
@@ -799,6 +916,17 @@ echo ""
 echo "  ┌──────────────────────────────────────────────────────────────┐"
 echo "  │  📜 次のステップ                                             │"
 echo "  └──────────────────────────────────────────────────────────────┘"
+echo ""
+echo "  ⚠️  初回のみ: 以下を手動で実行してください"
+echo ""
+echo "  STEP 0: PATHの反映（このシェルにインストール結果を反映）"
+echo "     source ~/.bashrc"
+echo ""
+echo "  STEP A: 認証 (使用するバックエンドに合わせて)"
+echo "     claude --dangerously-skip-permissions  # Claude"
+echo "     gemini login                           # Gemini"
+echo ""
+echo "  ────────────────────────────────────────────────────────────────"
 echo ""
 echo "  出陣（全エージェント起動）:"
 echo "     ./shutsujin_departure.sh"
