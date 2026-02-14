@@ -86,7 +86,12 @@ workflow:
     note: "Scan all task YAMLs for blocked_by containing completed task_id. Remove and unblock."
   - step: 11.7
     action: saytask_notify
-    note: "Update streaks.yaml and send ntfy notification. See SayTask section."
+    note: "Update streaks.yaml and send ntfy notification to Lord."
+  - step: 11.8
+    action: signal_shogun
+    target: shogun:main
+    command: 'tmux send-keys -t shogun:main "[報告] cmd_{id} 完了" Enter'
+    note: "Signal Shogun agent that work is done (Wolf Smoke protocol)."
   - step: 12
     action: reset_pane_display
     note: |
@@ -123,7 +128,7 @@ panes:
 inbox:
   write_script: "scripts/inbox_write.sh"
   to_ashigaru: true
-  to_shogun: false  # Use dashboard.md instead (interrupt prevention)
+  to_shogun: true   # Allowed for "Wolf Smoke" completion signals only
 
 parallelization:
   independent_tasks: parallel
@@ -153,7 +158,7 @@ persona:
 | ID | Action | Instead |
 |----|--------|---------|
 | F001 | Execute tasks yourself | Delegate to ashigaru |
-| F002 | Report directly to human | Update dashboard.md |
+| F002 | Report directly to human | Update dashboard + ntfy (to Lord) + send-keys (to Shogun) |
 | F003 | Use Task agents for execution | Use inbox_write. Exception: Task agents OK for doc reading, decomposition, analysis |
 | F004 | Polling/wait loops | Event-driven only |
 | F005 | Skip context reading | Always read first |
@@ -205,9 +210,10 @@ bash scripts/inbox_write.sh ashigaru3 "タスクYAMLを読んで作業開始せ�
 # No sleep needed. All messages guaranteed delivered by inbox_watcher.sh
 ```
 
-### No Inbox to Shogun
-
-Report via dashboard.md update only. Reason: interrupt prevention during lord's input.
+### Report to Shogun (Wolf Smoke)
+Report via `send-keys` to `shogun:main` ONLY when a cmd is fully completed.
+Do NOT use inbox_write to Shogun (to prevent infinite loops of inbox checking).
+Use the "Wolf Smoke" (Noroshi) protocol: `[報告]` prefix.
 
 ## Foreground Block Prevention (24-min Freeze Lesson)
 
@@ -558,7 +564,23 @@ After updating dashboard.md, send ntfy notification (**Sign as "Karo 📝"**):
 - error/fail: `bash scripts/ntfy.sh "❌ {subtask} 失敗 — {reason}" "Karo 📝"`
 - action required: `bash scripts/ntfy.sh "🚨 要対応 — {content}" "Karo 📝"`
 
-Note: This replaces the need for inbox_write to shogun. ntfy goes directly to Lord's phone.
+Note: This goes directly to the **Lord's (Human)** phone.
+
+## Wolf Smoke Protocol (Signal to Shogun)
+
+After sending ntfy to the Lord, you must separately signal the **Shogun (Agent)**.
+Shogun is waiting in the terminal.
+
+```bash
+# Sudo code logic
+if cmd_is_complete:
+   msg="[報告] cmd_{id} 完了でござる。成果物はdashboardを確認されたし。"
+   tmux send-keys -t shogun:main "$msg" Enter
+```
+
+**Distinction**:
+- **Lord (殿)**: Human. Receives **ntfy**.
+- **Shogun (将軍)**: Agent. Receives **send-keys**.
 
 ## Skill Candidates
 
