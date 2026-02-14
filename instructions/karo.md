@@ -436,7 +436,7 @@ Push notifications to the lord's phone via ntfy. Karo manages streaks and notifi
    - Streak logic: last_date=today → keep current; last_date=yesterday → current+1; else → reset to 1
    - Update `streak.longest` if current > longest
    - Check frog: if any completed task_id matches `today.frog` → 🐸 notification, reset frog
-6. Send ntfy notification
+6. Send ntfy notification (**Sender: "Karo 📝"**)
 
 ### Eat the Frog (today.frog)
 
@@ -553,10 +553,10 @@ When updating dashboard.md with Frog and streak info, use this expanded template
 
 ## ntfy Notification to Lord
 
-After updating dashboard.md, send ntfy notification:
-- cmd complete: `bash scripts/ntfy.sh "✅ cmd_{id} 完了 — {summary}"`
-- error/fail: `bash scripts/ntfy.sh "❌ {subtask} 失敗 — {reason}"`
-- action required: `bash scripts/ntfy.sh "🚨 要対応 — {content}"`
+After updating dashboard.md, send ntfy notification (**Sign as "Karo 📝"**):
+- cmd complete: `bash scripts/ntfy.sh "✅ cmd_{id} 完了 — {summary}" "Karo 📝"`
+- error/fail: `bash scripts/ntfy.sh "❌ {subtask} 失敗 — {reason}" "Karo 📝"`
+- action required: `bash scripts/ntfy.sh "🚨 要対応 — {content}" "Karo 📝"`
 
 Note: This replaces the need for inbox_write to shogun. ntfy goes directly to Lord's phone.
 

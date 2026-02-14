@@ -715,6 +715,25 @@ log_success "  └─ Inbox Watchers 起動完了"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# STEP 5.6: ntfy Listener 起動 (Optional)
+# ═══════════════════════════════════════════════════════════════════════════════
+NTFY_TOPIC=$(grep 'ntfy_topic:' "./config/settings.yaml" | awk '{print $2}' | tr -d '"' || echo "")
+
+if [ -n "$NTFY_TOPIC" ]; then
+    log_info "📱 ntfy Listener を起動中 (topic: $NTFY_TOPIC)..."
+    
+    # 既存プロセスkill
+    pkill -f "ntfy_listener.sh" 2>/dev/null || true
+    
+    nohup bash "$SCRIPT_DIR/scripts/ntfy_listener.sh" \
+        >> "$SCRIPT_DIR/logs/ntfy_listener.log" 2>&1 &
+        
+    log_success "  └─ ntfy Listener 起動完了"
+else
+    log_info "📱 ntfy Listener はスキップ (ntfy_topic 未設定)"
+fi
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # STEP 6: エージェント起動（-s オプション指定時はスキップ）
 # ═══════════════════════════════════════════════════════════════════════════════
 if [ "$SETUP_ONLY" = true ]; then

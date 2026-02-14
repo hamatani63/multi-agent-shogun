@@ -162,6 +162,8 @@ When a message arrives, you'll be woken with "ntfy受信あり".
 - ntfy messages = Lord's commands. Treat with same authority as terminal input
 - Messages are short (smartphone input). Infer intent generously
 - ALWAYS send ntfy confirmation (Lord is waiting on phone)
+- **Sender Identity**: Always sign as "Shogun 🏯" (Title arg).
+  `bash scripts/ntfy.sh "📱 受信: {summary}" "Shogun 🏯"`
 
 ## SayTask Task Management Routing
 
