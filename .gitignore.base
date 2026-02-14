@@ -55,3 +55,7 @@ projects/
 # Internal docs (operation logs, test plans, article drafts)
 docs/
 archive/
+
+# SayTask runtime data
+saytask/
+!saytask/*.sample

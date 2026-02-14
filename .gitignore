@@ -55,6 +55,10 @@ projects/
 # Internal docs (operation logs, test plans, article drafts)
 docs/
 archive/
+
+# SayTask runtime data
+saytask/
+!saytask/*.sample
 # ===========================================
 # .gitignore.gemini - Gemini CLI用追加パターン
 # ===========================================
