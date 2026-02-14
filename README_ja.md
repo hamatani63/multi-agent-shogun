@@ -1,30 +1,41 @@
-# multi-agent-shogun (Gemini CLI対応版)
-
 <div align="center">
+
+# multi-agent-shogun
 
 **Gemini CLI / Claude Code マルチエージェント統率システム**
 
-*コマンド1つで、3−8体のAIエージェントが並列稼働*
+*コマンド1つで、3−10体のAIエージェントが並列稼働*
 
-**Gemini CLI と Claude Code CLI の両方に対応！**
+**Gemini CLI, Claude Code, OpenAI Codex, GitHub Copilot, Kimi Code 対応！**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Gemini CLI](https://img.shields.io/badge/Gemini-CLI-blue)](https://github.com/google-gemini/gemini-cli)
-[![Claude Code](https://img.shields.io/badge/Claude-Code-blueviolet)](https://claude.ai)
+[![v3.0 Multi-CLI](https://img.shields.io/badge/v3.0-Multi--CLI_Support-ff6600?style=flat-square&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiI+PHRleHQgeD0iMCIgeT0iMTIiIGZvbnQtc2l6ZT0iMTIiPuKalTwvdGV4dD48L3N2Zz4=)](https://github.com/yohey-w/multi-agent-shogun)
+[![Gemini CLI](https://img.shields.io/badge/Supports-Gemini_CLI-blue)](https://github.com/google-gemini/gemini-cli)
 [![tmux](https://img.shields.io/badge/tmux-required-green)](https://github.com/tmux/tmux)
 
 [English](README.md) | [日本語](README_ja.md)
 
 </div>
 
+<p align="center">
+  <img src="images/screenshots/hero/latest-translucent-20260210-190453.png" alt="Latest translucent command session in the Shogun pane" width="940">
+</p>
+
+<p align="center">
+  <img src="images/screenshots/hero/latest-translucent-20260208-084602.png" alt="Quick natural-language command in the Shogun pane" width="420">
+  <img src="images/company-creed-all-panes.png" alt="Karo and Ashigaru panes reacting in parallel" width="520">
+</p>
+
+<p align="center"><i>One Karo (manager) coordinating 8 Ashigaru (workers) — real session, no mock data.</i></p>
+
 ---
 
 ## これは何？
 
-**multi-agent-shogun** は、複数の Claude Code インスタンスを同時に実行し、戦国時代の軍制のように統率するシステムです。
+**multi-agent-shogun** は、複数のAIコーディングCLIインスタンスを同時に実行し、戦国時代の軍制のように統率するシステムです。**Gemini CLI**, **Claude Code**, **OpenAI Codex**, **GitHub Copilot**, **Kimi Code** に対応しています。
 
 **なぜ使うのか？**
-- 1つの命令で、3体のAIワーカーが並列で実行
+- 1つの命令で、3〜10体のAIワーカーが並列で実行
 - 待ち時間なし - タスクがバックグラウンドで実行中も次の命令を出せる
 - AIがセッションを跨いであなたの好みを記憶（Memory MCP）
 - ダッシュボードでリアルタイム進捗確認
@@ -42,16 +53,93 @@
     └──────┬──────┘
            │
     ┌───┬──┴──┬───┐
-    │ 1 │  2  │ 3 │  ← 3体のワーカーが並列実行
+    │ 1 │  2  │ 3 │  ← 3〜8体のワーカーが並列実行
     └───┴─────┴───┘
         ASHIGARU
 ```
 
 ---
 
+## なぜ将軍（Shogun）なのか？
+
+多くのマルチエージェントフレームワークは調整のたびにAPIトークンを消費しますが、Shogunは違います。
+
+| | Claude Code `Task` | LangGraph | CrewAI | **multi-agent-shogun** |
+|---|---|---|---|---|
+| **アーキテクチャ** | 1プロセス内のサブエージェント | グラフベースの状態遷移 | ロールベース | tmuxによる封建的階層構造 |
+| **並列性** | 順次実行（1つずつ） | 並列ノード (v0.2+) | 制限あり | **3〜8体の独立エージェント** |
+| **調整コスト** | タスクごとのAPIコール | API + インフラ (DB) | API + 基盤 | **ゼロ** (YAML + tmux) |
+| **可観測性** | ログのみ | LangSmith連携 | OpenTelemetry | **tmuxペインで常時可視化** |
+| **スキル発見** | なし | なし | なし | **ボトムアップ提案型** |
+| **セットアップ** | 組み込み | 重厚（インフラ構成要） | pip install | シェルスクリプトのみ |
+
+### 決定的な違い
+
+**ゼロ・コーディネーション・オーバーヘッド** — エージェントはファイル経由で会話します。APIコールは実作業のみに使われ、調整や会話には一切消費しません。8体動かせば、純粋に8体分の作業コストのみが発生します。
+
+**完全な透明性** — 全エージェントがtmuxペインで見えます。指示、報告、意思決定はすべてYAMLファイルとして残り、Git管理可能です。ブラックボックスはありません。
+
+**実戦的な階層構造** — 将軍→家老→足軽の指揮系統により、競合を防ぎます。明確なオーナーシップ、専用ファイル、イベント駆動通信により、ポーリングも不要です。
+
+---
+
+## なぜCLIなのか？（APIではなく）
+
+多くのAIコーディングツールはトークンごとの従量課金です。Opus級のエージェントをAPIで8体動かせば、**1時間で$100以上**かかります。CLIの定額制（サブスクリプション）なら話は別です：
+
+| | API (従量課金) | CLI (定額制) |
+|---|---|---|
+| **8エージェント × Opus** | ~$100+/時間 | ~$200/月（推定） |
+| **コスト予測** | 不可（スパイク恐怖） | 固定（安心） |
+| **使用の心理的障壁** | 1トークンも無駄にできない | 無制限に試行錯誤できる |
+| **実験の自由度** | 制約あり | 自由にデプロイ可能 |
+
+**「AIを無謀に使え」** — 定額制CLIなら、8体のエージェントを躊躇なく投入できます。1時間働かせても24時間働かせてもコストは同じ。「そこそこでいいや」と妥協せず、徹底的にやらせることができます。
+
+### マルチCLI対応 (Multi-CLI Support)
+
+Shogunは単一ベンダーにロックインされません。特徴の異なる5つのCLIツールをサポートしています：
+
+| CLI | 主な強み | デフォルトモデル |
+|-----|----------|-----------------|
+| **Gemini CLI** | **レート制限に寛容**、無料枠あり、**100万トークンコンテキスト** | Gemini 1.5 Pro / Flash |
+| **Claude Code** | tmux統合が盤石、Memory MCP、強力なファイル操作 | Claude Sonnet 4.5 |
+| **OpenAI Codex** | サンドボックス実行、JSONL構造化出力、ヘッドレスモード | gpt-5.3-codex / **spark** |
+| **GitHub Copilot** | GitHub MCP内蔵、4つの専門エージェント、`/delegate`機能 | Claude Sonnet 4.5 |
+| **Kimi Code** | 無料枠あり、強力な多言語対応 | Kimi k2 |
+
+統一された指示書ビルドシステムにより、共通テンプレートから各CLI専用の指示書（instructions）を自動生成します一箇所修正すれば全CLIに反映されます。
+
+---
+
+## ボトムアップ・スキル発見
+
+これは他のフレームワークにはない機能です。
+
+足軽がタスクを実行する中で、**再利用可能なパターンを自動的に発見**し、スキル候補として提案します。家老がこれをダッシュボードに集約し、殿（あなた）が承認することで、正式なスキルとして採用されます。
+
+```
+足軽がタスク完了
+    ↓
+「このパターン、他のプロジェクトでも3回使ったな」と気づく
+    ↓
+YAMLで報告:  skill_candidate:
+                found: true
+                name: "api-endpoint-scaffold"
+                reason: "3つのプロジェクトで共通のREST雛形"
+    ↓
+ダッシュボードに表示 → あなたが承認 → .claude/commands/ にスキル生成
+    ↓
+全エージェントが /api-endpoint-scaffold を使えるようになる
+```
+
+スキルはライブラリから探すのではなく、日々の実戦から有機的に成長します。あなたのスキルセットは、**あなたのワークフローそのもの**になります。
+
+---
+
 ## 🚀 クイックスタート
 
-### Windowsユーザー（最も一般的）
+### Windows (WSL2)
 
 <table>
 <tr>
@@ -121,60 +209,20 @@ cd /mnt/c/tools/multi-agent-shogun
 </tr>
 </table>
 
-#### 📅 毎日の起動（初回セットアップ後）
+#### 初回のみ：認証
 
-**Ubuntuターミナル**（WSL）を開いて実行：
+`first_setup.sh` の後、一度だけ実行して認証してください：
 
 ```bash
-cd /mnt/c/tools/multi-agent-shogun
-./shutsujin_departure.sh
-tmux attach-session -t shogun      # 将軍に接続して命令を出す
+# 1. パス反映
+source ~/.bashrc
+
+# 2. 認証 (使用するバックエンドに合わせて)
+claude --dangerously-skip-permissions  # Claudeの場合
+gemini login                           # Geminiの場合
 ```
 
-### 📱 スマホからアクセス（どこからでも指揮）
-
-ベッドから、カフェから、トイレから。スマホでAI部下を操作できる。
-
-**必要なもの（全部無料）：**
-
-| 名前 | 一言で言うと | 役割 |
-|------|------------|------|
-| [Tailscale](https://tailscale.com/) | 外から自宅に届く道 | カフェからでもトイレからでも自宅PCに繋がる |
-| SSH | その道を歩く足 | Tailscaleの道を通って自宅PCにログインする |
-| [Termux](https://termux.dev/) | スマホの黒い画面 | SSHを使うために必要。スマホに入れるだけ |
-
-**セットアップ：**
-
-1. WSLとスマホの両方にTailscaleをインストール
-2. WSL側（Auth key方式 — ブラウザ不要）：
-   ```bash
-   curl -fsSL https://tailscale.com/install.sh | sh
-   sudo tailscaled &
-   sudo tailscale up --authkey tskey-auth-XXXXXXXXXXXX
-   sudo service ssh start
-   ```
-3. スマホのTermuxから：
-   ```sh
-   pkg update && pkg install openssh
-   ssh あなたのユーザー名@あなたのTailscale IP
-   css    # 将軍に繋がる
-   ```
-4. ＋ボタンで新しいウィンドウを開いて、部下の様子も見る：
-   ```sh
-   ssh あなたのユーザー名@あなたのTailscale IP
-   csm    # 家老+足軽の4ペインが広がる
-   ```
-
-**切り方：** Termuxのウィンドウをスワイプで閉じるだけ。tmuxセッションは生き残る。AI部下は黙々と作業を続けている。
-
-**音声入力：** スマホの音声入力で喋れば、将軍が自然言語を理解して全軍に指示を出す。音声認識の誤字も文脈で解釈してくれる。
-
----
-
-<details>
-<summary>🐧 <b>Linux / Mac ユーザー</b>（クリックで展開）</summary>
-
-### 初回セットアップ
+### Linux / macOS
 
 ```bash
 # 1. リポジトリをクローン
@@ -192,270 +240,92 @@ chmod +x *.sh
 
 ```bash
 cd ~/multi-agent-shogun
-./shutsujin_departure.sh
+./shutsujin_departure.sh           # 通常起動（前回のタスクを継続）
+./shutsujin_departure.sh -c        # クリーン起動（キューをリセット、履歴は保持）
 tmux attach-session -t shogun      # 将軍に接続して命令を出す
 ```
 
-</details>
+**起動オプション:**
+- **デフォルト**: 前回のタスクキューとコマンド履歴を維持して再開
+- **`-c` / `--clean`**: タスクキューをリセットして再出発（履歴 `shogun_to_karo.yaml` は保持）。
+
+### 📱 スマホからアクセス（どこからでも指揮）
+
+ベッドから、カフェから、トイレから。スマホでAI部下を操作できる。
+
+**必要なもの（全部無料）：**
+- [Tailscale](https://tailscale.com/) - 安全なトンネル
+- [Termux](https://termux.dev/) - Android用ターミナル
+- SSH - Ubuntuにインストール済み
+
+**手順：**
+
+1. WSLとスマホの両方にTailscaleをインストール
+2. WSL側（Auth key方式）：
+   ```bash
+   curl -fsSL https://tailscale.com/install.sh | sh
+   sudo tailscaled &
+   sudo tailscale up --authkey tskey-auth-XXXXXXXXXXXX
+   sudo service ssh start
+   ```
+3. スマホのTermuxから：
+   ```sh
+   pkg update && pkg install openssh
+   ssh あなたのユーザー名@あなたのTailscale IP
+   css    # 将軍に繋がる
+   ```
+4. ＋ボタンで新しいウィンドウを開いて、部下の様子も見る：
+   ```sh
+   ssh あなたのユーザー名@あなたのTailscale IP
+   csm    # 家老+足軽の全ペインが広がる
+   ```
+
+**切り方：** Termuxのウィンドウをスワイプで閉じるだけ。tmuxセッションは生き残る。
 
 ---
 
-<details>
-<summary>❓ <b>WSL2とは？なぜ必要？</b>（クリックで展開）</summary>
+## ⚙️ 設定
 
-### WSL2について
+### 言語設定
 
-**WSL2（Windows Subsystem for Linux）** は、Windows内でLinuxを実行できる機能です。このシステムは `tmux`（Linuxツール）を使って複数のAIエージェントを管理するため、WindowsではWSL2が必要です。
-
-### WSL2がまだない場合
-
-問題ありません！`install.bat` を実行すると：
-1. WSL2がインストールされているかチェック（なければ自動インストール）
-2. Ubuntuがインストールされているかチェック（なければ自動インストール）
-3. 次のステップ（`first_setup.sh` の実行方法）を案内
-
-**クイックインストールコマンド**（PowerShellを管理者として実行）：
-```powershell
-wsl --install
+```yaml
+# config/settings.yaml
+language: ja   # 日本語のみ
+# language: en   # 日本語 + 英訳併記
 ```
 
-その後、コンピュータを再起動して `install.bat` を再実行してください。
+### バックエンド切替
 
-</details>
+```yaml
+# config/settings.yaml
 
----
+# Claude バックエンド（デフォルト）
+# backend: claude
 
-<details>
-<summary>📋 <b>スクリプトリファレンス</b>（クリックで展開）</summary>
-
-| スクリプト | 用途 | 実行タイミング |
-|-----------|------|---------------|
-| `install.bat` | Windows: WSL2 + Ubuntu のセットアップ | 初回のみ |
-| `first_setup.sh` | tmux、Node.js、Claude Code CLI のインストール + Memory MCP設定 | 初回のみ |
-| `shutsujin_departure.sh` | tmuxセッション作成 + Claude Code起動 + 指示書読み込み | 毎日 |
-
-### `install.bat` が自動で行うこと：
-- ✅ WSL2がインストールされているかチェック（未インストールなら案内）
-- ✅ Ubuntuがインストールされているかチェック（未インストールなら案内）
-- ✅ 次のステップ（`first_setup.sh` の実行方法）を案内
-
-### `shutsujin_departure.sh` が行うこと：
-- ✅ tmuxセッションを作成（shogun + multiagent）
-- ✅ 全エージェントでClaude Codeを起動
-- ✅ 各エージェントに指示書を自動読み込み
-- ✅ キューファイルをリセットして新しい状態に
-
-**実行後、全エージェントが即座にコマンドを受け付ける準備完了！**
-
-</details>
-
----
-
-<details>
-<summary>🔧 <b>必要環境（手動セットアップの場合）</b>（クリックで展開）</summary>
-
-依存関係を手動でインストールする場合：
-
-| 要件 | インストール方法 | 備考 |
-|------|-----------------|------|
-| WSL2 + Ubuntu | PowerShellで `wsl --install` | Windowsのみ |
-| Ubuntuをデフォルトに設定 | `wsl --set-default Ubuntu` | スクリプトの動作に必要 |
-| tmux | `sudo apt install tmux` | ターミナルマルチプレクサ |
-| Node.js v20+ | `nvm install 20` | Claude Code CLIに必要 |
-| Claude Code CLI | `npm install -g @anthropic-ai/claude-code` | Anthropic公式CLI |
-
-</details>
-
----
-
-### ✅ セットアップ後の状態
-
-どちらのオプションでも、**10体のAIエージェント**が自動起動します：
-
-| エージェント | 役割 | 数 |
-|-------------|------|-----|
-| 🏯 将軍（Shogun） | 総大将 - あなたの命令を受ける | 1 |
-| 📋 家老（Karo） | 管理者 - タスクを分配 | 1 |
-| ⚔️ 足軽（Ashigaru） | ワーカー - 並列でタスク実行 | 8 |
-
-tmuxセッションが作成されます：
-- `shogun` - ここに接続してコマンドを出す
-- `multiagent` - ワーカーがバックグラウンドで稼働
-
----
-
-## 📖 基本的な使い方
-
-### Step 1: 将軍に接続
-
-`shutsujin_departure.sh` 実行後、全エージェントが自動的に指示書を読み込み、作業準備完了となります。
-
-新しいターミナルを開いて将軍に接続：
-
-```bash
-tmux attach-session -t shogun
+# Gemini バックエンド
+backend: gemini
 ```
 
-### Step 2: 最初の命令を出す
+### 🧠 Gemini 設定
 
-将軍は既に初期化済み！そのまま命令を出せます：
+Gemini CLI向けに、レート制限と応答速度を考慮した構成になっています。
 
+```yaml
+gemini:
+  model_shogun: gemini-3-flash-preview
+  model_karo: gemini-3-pro-preview
+  model_ashigaru_strong: gemini-3-pro-preview
+  model_ashigaru_fast: gemini-3-flash-preview
+  num_ashigaru: 3  # レート制限回避のため8→3に削減
+  auth_method: oauth
 ```
-JavaScriptフレームワーク上位5つを調査して比較表を作成せよ
-```
-
-将軍は：
-1. タスクをYAMLファイルに書き込む
-2. 家老（管理者）に通知
-3. 即座にあなたに制御を返す（待つ必要なし！）
-
-その間、家老はタスクを足軽ワーカーに分配し、並列実行します。
-
-### Step 3: 進捗を確認
-
-エディタで `dashboard.md` を開いてリアルタイム状況を確認：
-
-```markdown
-## 進行中
-| ワーカー | タスク | 状態 |
-|----------|--------|------|
-| 足軽 1 | React調査 | 実行中 |
-| 足軽 2 | Vue調査 | 実行中 |
-| 足軽 3 | Angular調査 | 完了 |
-```
-
----
-
-## ✨ 主な特徴
-
-### ⚡ 1. 並列実行
-
-1つの命令で最大8つの並列タスクを生成：
-
-```
-あなた: 「5つのMCPサーバを調査せよ」
-→ 5体の足軽が同時に調査開始
-→ 数時間ではなく数分で結果が出る
-```
-
-### 🔄 2. ノンブロッキングワークフロー
-
-将軍は即座に委譲して、あなたに制御を返します：
-
-```
-あなた: 命令 → 将軍: 委譲 → あなた: 次の命令をすぐ出せる
-                                    ↓
-                    ワーカー: バックグラウンドで実行
-                                    ↓
-                    ダッシュボード: 結果を表示
-```
-
-長いタスクの完了を待つ必要はありません。
-
-### 🧠 3. セッション間記憶（Memory MCP）
-
-AIがあなたの好みを記憶します：
-
-```
-セッション1: 「シンプルな方法が好き」と伝える
-            → Memory MCPに保存
-
-セッション2: 起動時にAIがメモリを読み込む
-            → 複雑な方法を提案しなくなる
-```
-
-### 📡 4. イベント駆動（ポーリングなし）
-
-エージェントはYAMLファイルで通信し、tmux send-keysで互いを起こします。
-**ポーリングループでAPIコールを浪費しません。**
-
-### 📸 5. スクリーンショット連携
-
-VSCode拡張のClaude Codeはスクショを貼り付けて事象を説明できます。このCLIシステムでも同等の機能を実現：
-
-```
-# config/settings.yaml でスクショフォルダを設定
-screenshot:
-  path: "/mnt/c/Users/あなたの名前/Pictures/Screenshots"
-
-# 将軍に伝えるだけ:
-あなた: 「最新のスクショを見ろ」
-あなた: 「スクショ2枚見ろ」
-→ AIが即座にスクリーンショットを読み取って分析
-```
-
-**💡 Windowsのコツ:** `Win + Shift + S` でスクショが撮れます。保存先を `settings.yaml` のパスに合わせると、シームレスに連携できます。
-
-こんな時に便利：
-- UIのバグを視覚的に説明
-- エラーメッセージを見せる
-- 変更前後の状態を比較
-
-### 📁 6. コンテキスト管理
-
-効率的な知識共有のため、四層構造のコンテキストを採用：
-
-| レイヤー | 場所 | 用途 |
-|---------|------|------|
-| Layer 1: Memory MCP | `memory/shogun_memory.jsonl` | プロジェクト横断・セッションを跨ぐ長期記憶 |
-| Layer 2: Project | `config/projects.yaml`, `projects/<id>.yaml`, `context/{project}.md` | プロジェクト固有情報・技術知見 |
-| Layer 3: YAML Queue | `queue/shogun_to_karo.yaml`, `queue/tasks/`, `queue/reports/` | タスク管理・指示と報告の正データ |
-| Layer 4: Session | CLAUDE.md, instructions/*.md | 作業中コンテキスト（/clearで破棄） |
-
-この設計により：
-- どの足軽でも任意のプロジェクトを担当可能
-- エージェント切り替え時もコンテキスト継続
-- 関心の分離が明確
-- セッション間の知識永続化
-
-#### /clear プロトコル（コスト最適化）
-
-長時間作業するとコンテキスト（Layer 4）が膨れ、APIコストが増大する。`/clear` でセッション記憶を消去すれば、コストがリセットされる。Layer 1〜3はファイルとして残るので失われない。
-
-`/clear` 後の足軽の復帰コスト: **約1,950トークン**（目標5,000の39%）
-
-1. CLAUDE.md（自動読み込み）→ shogunシステムの一員と認識
-2. `tmux display-message -t "$TMUX_PANE" -p '#{@agent_id}'` → 自分の番号を確認
-3. Memory MCP 読み込み → 殿の好みを復元（~700トークン）
-4. タスクYAML 読み込み → 次の仕事を確認（~800トークン）
-
-「何を読ませないか」の設計がコスト削減に効いている。
-
-### 汎用コンテキストテンプレート
-
-すべてのプロジェクトで同じ7セクション構成のテンプレートを使用：
-
-| セクション | 目的 |
-|-----------|------|
-| What | プロジェクトの概要説明 |
-| Why | 目的と成功の定義 |
-| Who | 関係者と責任者 |
-| Constraints | 期限、予算、制約 |
-| Current State | 進捗、次のアクション、ブロッカー |
-| Decisions | 決定事項と理由の記録 |
-| Notes | 自由記述のメモ・気づき |
-
-この統一フォーマットにより：
-- どのエージェントでも素早くオンボーディング可能
-- すべてのプロジェクトで一貫した情報管理
-- 足軽間の作業引き継ぎが容易
-
----
-
-### 🧠 モデル設定
-
-### 🧠 モデル設定（Gemini版）
-
-Gemini CLIでは、**レート制限**と**応答速度**を考慮した構成になっています。
 
 | エージェント | モデル | 役割 | 理由 |
 |-------------|--------|----------|------|
-| **将軍** | Flash | 指揮官 | 高速な応答とコンテキスト処理能力（1Mトークン） |
+| **将軍** | Flash | 指揮官 | 高速な応答とコンテキスト処理能力（100万トークン） |
 | **家老** | **Pro** | 管理者 | タスク分配と進捗管理（強モデル） |
 | **足軽1** | **Pro** | 主力 | 複雑な推論やコーディングを担当（強モデル） |
 | **足軽2-3** | Flash | 遊撃 | 調査や単純作業を高速に処理（高速モデル） |
-
-※ モデル名は `config/settings.yaml` でカスタマイズ可能（例: `gemini-3-pro-preview` 等）
 
 #### 陣形モード（Gemini版）
 
@@ -464,15 +334,10 @@ Gemini CLIでは、**レート制限**と**応答速度**を考慮した構成�
 | **平時の陣**（デフォルト） | **Pro** | Flash | `./shutsujin_departure.sh` |
 | **決戦の陣**（全力） | **Pro** | **Pro** | `./shutsujin_departure.sh -k` |
 
-- **平時の陣**: 日常業務向け。足軽1のみProモデルを使用してコストと速度のバランスを取る
-- **決戦の陣**: 難易度の高いタスク向け。全足軽がProモデルとなり、最大火力で制圧する
+### 🧠 Claude 設定
 
----
-
-### 🧠 モデル設定（Claude版）
-
-| エージェント | モデル | 思考モード |
-|-------------|--------|----------|
+| エージェント | デフォルトモデル | 思考モード |
+|-------------|-----------------|------------|
 | 将軍 | Opus | 無効 |
 | 家老 | Opus | 有効 |
 | 足軽1-4 | Sonnet | 有効 |
@@ -485,90 +350,7 @@ Gemini CLIでは、**レート制限**と**応答速度**を考慮した構成�
 
 ---
 
-## 🎯 設計思想
-
-### なぜ階層構造（将軍→家老→足軽）なのか
-
-1. **即座の応答**: 将軍は即座に委譲し、あなたに制御を返す
-2. **並列実行**: 家老が複数の足軽に同時分配
-3. **単一責任**: 各役割が明確に分離され、混乱しない
-4. **スケーラビリティ**: 足軽を増やしても構造が崩れない
-5. **障害分離**: 1体の足軽が失敗しても他に影響しない
-6. **人間への報告一元化**: 将軍だけが人間とやり取りするため、情報が整理される
-
-### なぜ YAML + send-keys なのか
-
-1. **状態の永続化**: YAMLファイルで構造化通信し、エージェント再起動にも耐える
-2. **ポーリング不要**: イベント駆動でAPIコストを削減
-3. **割り込み防止**: エージェント同士やあなたの入力への割り込みを防止
-4. **デバッグ容易**: 人間がYAMLを直接読んで状況把握できる
-5. **競合回避**: 各足軽に専用ファイルを割り当て
-6. **2秒間隔送信**: 複数足軽への連続送信時に `sleep 2` を挟むことで、入力バッファ溢れを防止（到達率14%→87.5%に改善）
-
-### エージェント識別（@agent_id）
-
-各ペインに `@agent_id` というtmuxユーザーオプションを設定（例: `karo`, `ashigaru1`）。`pane_index` はペイン再配置でズレるが、`@agent_id` は `shutsujin_departure.sh` が起動時に固定設定するため変わらない。
-
-エージェントの自己識別:
-```bash
-tmux display-message -t "$TMUX_PANE" -p '#{@agent_id}'
-```
-`-t "$TMUX_PANE"` が必須。省略するとアクティブペイン（操作中のペイン）の値が返り、誤認識の原因になる。
-
-モデル名も `@model_name` として保存され、`pane-border-format` で常時表示。Claude Codeがペインタイトルを上書きしてもモデル名は消えない。
-
-### なぜ dashboard.md は家老のみが更新するのか
-
-1. **単一更新者**: 競合を防ぐため、更新責任者を1人に限定
-2. **情報集約**: 家老は全足軽の報告を受ける立場なので全体像を把握
-3. **一貫性**: すべての更新が1つの品質ゲートを通過
-4. **割り込み防止**: 将軍が更新すると、殿の入力中に割り込む恐れあり
-
----
-
-## 🛠️ スキル
-
-初期状態ではスキルはありません。
-運用中にダッシュボード（dashboard.md）の「スキル化候補」から承認して増やしていきます。
-
-スキルは `/スキル名` で呼び出し可能。将軍に「/スキル名 を実行」と伝えるだけ。
-
-### スキルの思想
-
-**1. スキルはコミット対象外**
-
-`.claude/commands/` 配下のスキルはリポジトリにコミットしない設計。理由：
-- 各ユーザの業務・ワークフローは異なる
-- 汎用的なスキルを押し付けるのではなく、ユーザが自分に必要なスキルを育てていく
-
-**2. スキル取得の手順**
-
-```
-足軽が作業中にパターンを発見
-    ↓
-dashboard.md の「スキル化候補」に上がる
-    ↓
-殿（あなた）が内容を確認
-    ↓
-承認すれば家老に指示してスキルを作成
-```
-
-スキルはユーザ主導で増やすもの。自動で増えると管理不能になるため、「これは便利」と判断したものだけを残す。
-
----
-
-## 🔌 MCPセットアップガイド
-
-MCP（Model Context Protocol）サーバはClaudeの機能を拡張します。セットアップ方法：
-
-### MCPとは？
-
-MCPサーバはClaudeに外部ツールへのアクセスを提供します：
-- **Notion MCP** → Notionページの読み書き
-- **GitHub MCP** → PR作成、Issue管理
-- **Memory MCP** → セッション間で記憶を保持
-
-### MCPサーバのインストール
+## MCPサーバー設定ガイド
 
 #### Gemini CLI
 
@@ -583,177 +365,33 @@ Gemini CLIでは、設定ファイル `~/.gemini/settings.json` を直接編集�
       "env": {
         "MEMORY_FILE_PATH": "/absolute/path/to/multi-agent-shogun/memory/shogun_memory.jsonl"
       }
-    },
-    // 他のMCPサーバーも同様に追加
-    "github": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github"],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "your_token_here"
-      }
     }
   }
 }
 ```
 
-設定ファイルを保存した後、Gemini CLIを再起動すると反映されます。
-
 #### Claude Code CLI
 
-以下のコマンドでMCPサーバを追加：
-
 ```bash
-# 1. Notion - Notionワークスペースに接続
-claude mcp add notion -e NOTION_TOKEN=your_token_here -- npx -y @notionhq/notion-mcp-server
-
-# 2. Playwright - ブラウザ自動化
-claude mcp add playwright -- npx @playwright/mcp@latest
-# 注意: 先に `npx playwright install chromium` を実行してください
-
-# 3. GitHub - リポジトリ操作
-claude mcp add github -e GITHUB_PERSONAL_ACCESS_TOKEN=your_pat_here -- npx -y @modelcontextprotocol/server-github
-
-# 4. Sequential Thinking - 複雑な問題を段階的に思考
-claude mcp add sequential-thinking -- npx -y @modelcontextprotocol/server-sequential-thinking
-
-# 5. Memory - セッション間の長期記憶（推奨！）
-# ✅ first_setup.sh で自動設定済み
-# 手動で再設定する場合:
+# Memory (first_setup.shで自動設定済み)
 claude mcp add memory -e MEMORY_FILE_PATH="$PWD/memory/shogun_memory.jsonl" -- npx -y @modelcontextprotocol/server-memory
-```
 
-### インストール確認
+# Notion
+claude mcp add notion -e NOTION_TOKEN=your_token -- npx -y @notionhq/notion-mcp-server
 
-**Claude Code CLI:**
-```bash
-claude mcp list
-```
+# GitHub
+claude mcp add github -e GITHUB_PERSONAL_ACCESS_TOKEN=your_pat -- npx -y @modelcontextprotocol/server-github
 
-**Gemini CLI:**
-設定ファイルが正しく読み込まれていれば、使用時にツールとして表示されます。
-
----
-
-## 🌍 実用例
-
-### 例1: 調査タスク
-
-```
-あなた: 「AIコーディングアシスタント上位5つを調査して比較せよ」
-
-実行される処理:
-1. 将軍が家老に委譲
-2. 家老が割り当て:
-   - 足軽1: GitHub Copilotを調査
-   - 足軽2: Cursorを調査
-   - 足軽3: Claude Codeを調査
-   - 足軽4: Codeiumを調査
-   - 足軽5: Amazon CodeWhispererを調査
-3. 5体が同時に調査
-4. 結果がdashboard.mdに集約
-```
-
-### 例2: PoC準備
-
-```
-あなた: 「このNotionページのプロジェクトでPoC準備: [URL]」
-
-実行される処理:
-1. 家老がMCP経由でNotionコンテンツを取得
-2. 足軽2: 確認すべき項目をリスト化
-3. 足軽3: 技術的な実現可能性を調査
-4. 足軽4: PoC計画書を作成
-5. 全結果がdashboard.mdに集約、会議の準備完了
+# Playwright (ブラウザ操作)
+claude mcp add playwright -- npx @playwright/mcp@latest
 ```
 
 ---
 
-## ⚙️ 設定
-
-### 設定ファイルの作成（初回のみ）
-
-`config/settings.yaml` でシステムの動作を設定します。
-このファイルはGit管理外のため、あなたの環境に合わせて自由に編集できます。
-
-初回起動時に `config/settings.yaml.example` から自動的に作成されます。
-手動で作成する場合：
-
-```bash
-cp config/settings.yaml.example config/settings.yaml
-```
-
-### 主な設定項目
-
-`config/settings.yaml` を編集して変更します：
-
-#### 1. 言語設定
-
-```yaml
-language: ja   # 日本語のみ
-# language: en   # 日本語 + 英訳併記
-```
-
-#### 2. バックエンド切替
-
-```yaml
-# Claude バックエンド（デフォルト）
-# backend: claude
-
-# Gemini バックエンド
-backend: gemini
-```
-
----
-
-## 🌐 Gemini CLI 対応
-
-multi-agent-shogunは**Gemini CLI**にも対応しています。Claude Code CLIの代替バックエンドとして使用できます。
-
-### バックエンド切替
-
-`config/settings.yaml` を編集：
-
-```yaml
-# Claude バックエンド（デフォルト）
-backend: claude
-
-# Gemini バックエンド
-backend: gemini
-```
-
-### Gemini用設定
-
-```yaml
-gemini:
-  model_shogun: gemini-3-flash-preview
-  model_karo: gemini-3-pro-preview
-  model_ashigaru_strong: gemini-3-pro-preview
-  model_ashigaru_fast: gemini-3-flash-preview
-  num_ashigaru: 3  # レート制限対策で8→3に削減
-  auth_method: oauth
-```
-
-### Claude vs Gemini 比較
-
-| 項目 | Claude Code CLI | Gemini CLI |
-|------|----------------|------------|
-| 自動承認 | `--dangerously-skip-permissions` | `--yolo` |
-| 推奨足軽数 | 8人 | 3人（レート制限対策） |
-| 無料枠 | なし（API課金） | 1,000リクエスト/日/モデル |
-| 指示遵守度 | 高い | 明示的なプロンプトが必要 |
-
-### Gemini利用時の注意点
-
-- **レート制限**: Google OAuth無料枠には日次制限あり。足軽数を3人に減らすと安定
-- **モデル切替**: クォータ枯渇時は別モデルに切替可能（例: `gemini-3-flash-preview`）
-- **起動プロンプト**: Geminiには委譲ルールを明示的に伝える必要あり
-
----
-
-## 🛠️ 上級者向け
+## 🛠️ 上級者向け情報
 
 <details>
-<summary><b>スクリプトアーキテクチャ</b>（クリックで展開）</summary>
+<summary><b>スクリプトアーキテクチャ</b></summary>
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -792,259 +430,27 @@ gemini:
 </details>
 
 <details>
-<summary><b>shutsujin_departure.sh オプション</b>（クリックで展開）</summary>
+<summary><b>技術的な詳細</b></summary>
 
-```bash
-# デフォルト: フル起動（tmuxセッション + Claude Code起動）
-./shutsujin_departure.sh
-
-# セッションセットアップのみ（Claude Code起動なし）
-./shutsujin_departure.sh -s
-./shutsujin_departure.sh --setup-only
-
-# タスクキューをクリア（指令履歴は保持）
-./shutsujin_departure.sh -c
-./shutsujin_departure.sh --clean
-
-# 決戦の陣: 全足軽をOpusで起動（最大能力・高コスト）
-./shutsujin_departure.sh -k
-./shutsujin_departure.sh --kessen
-
-# フル起動 + Windows Terminalタブを開く
-./shutsujin_departure.sh -t
-./shutsujin_departure.sh --terminal
-
-# ヘルプを表示
-./shutsujin_departure.sh -h
-./shutsujin_departure.sh --help
-```
-
-</details>
-
-<details>
-<summary><b>よく使うワークフロー</b>（クリックで展開）</summary>
-
-**通常の毎日の使用：**
-```bash
-./shutsujin_departure.sh          # 全て起動
-tmux attach-session -t shogun     # 接続してコマンドを出す
-```
-
-**デバッグモード（手動制御）：**
-```bash
-./shutsujin_departure.sh -s       # セッションのみ作成
-
-# 特定のエージェントでClaude Codeを手動起動
-tmux send-keys -t shogun:0 'claude --dangerously-skip-permissions' Enter
-tmux send-keys -t multiagent:0.0 'claude --dangerously-skip-permissions' Enter
-```
-
-**クラッシュ後の再起動：**
-```bash
-# 既存セッションを終了
-tmux kill-session -t shogun
-tmux kill-session -t multiagent
-
-# 新しく起動
-./shutsujin_departure.sh
-```
-
-</details>
-
-<details>
-<summary><b>便利なエイリアス</b>（クリックで展開）</summary>
-
-`first_setup.sh` を実行すると、以下のエイリアスが `~/.bashrc` に自動追加されます：
-
-```bash
-alias css='tmux attach-session -t shogun'      # 将軍ウィンドウの起動
-alias csm='tmux attach-session -t multiagent'  # 家老・足軽ウィンドウの起動
-```
-
-※ エイリアスを反映するには `source ~/.bashrc` を実行するか、PowerShellで `wsl --shutdown` してからターミナルを開き直してください。
+- **エージェント識別** (`@agent_id`) — tmuxユーザーオプションでIDを固定。ペイン入れ替えの影響を受けない。
+- **決戦モード**（`-k` フラグ）— 全足軽Opus/Proの最大火力陣形。
+- **タスク依存関係システム**（`blockedBy`）— 依存タスク完了時に自動でブロック解除。
 
 </details>
 
 ---
 
-## 📁 ファイル構成
+## コントリビューション
 
-<details>
-<summary><b>クリックでファイル構成を展開</b></summary>
+Issue、Pull Requestを歓迎します。
 
-```
-multi-agent-shogun/
-│
-│  ┌─────────────────── セットアップスクリプト ───────────────────┐
-├── install.bat               # Windows: 初回セットアップ
-├── first_setup.sh            # Ubuntu/Mac: 初回セットアップ
-├── shutsujin_departure.sh    # 毎日の起動（指示書自動読み込み）
-│  └────────────────────────────────────────────────────────────┘
-│
-├── instructions/             # エージェント指示書
-│   ├── shogun.md             # 将軍の指示書
-│   ├── karo_gemini.md        # 家老の指示書
-│   └── ashigaru.md           # 足軽の指示書
-│
-├── config/
-│   └── settings.yaml         # 言語その他の設定
-│
-├── projects/                # プロジェクト詳細（git対象外、機密情報含む）
-│   └── <project_id>.yaml   # 各プロジェクトの全情報（クライアント、タスク、Notion連携等）
-│
-├── queue/                    # 通信ファイル
-│   ├── shogun_to_karo.yaml   # 将軍から家老へのコマンド
-│   ├── tasks/                # 各ワーカーのタスクファイル
-│   └── reports/              # ワーカーレポート
-│
-├── memory/                   # Memory MCP保存場所
-├── dashboard.md              # リアルタイム状況一覧
-└── CLAUDE.md                 # Claude用プロジェクトコンテキスト
-```
-
-</details>
-
----
-
-## 📂 プロジェクト管理
-
-このシステムは自身の開発だけでなく、**全てのホワイトカラー業務**を管理・実行する。プロジェクトのフォルダはこのリポジトリの外にあってもよい。
-
-### 仕組み
-
-```
-config/projects.yaml          # プロジェクト一覧（ID・名前・パス・ステータスのみ）
-projects/<project_id>.yaml    # 各プロジェクトの詳細情報
-```
-
-- **`config/projects.yaml`**: どのプロジェクトがあるかの一覧（サマリのみ）
-- **`projects/<id>.yaml`**: そのプロジェクトの全詳細（クライアント情報、契約、タスク、関連ファイル、Notionページ等）
-- **プロジェクトの実ファイル**（ソースコード、設計書等）は `path` で指定した外部フォルダに配置
-- **`projects/` はGit追跡対象外**（クライアントの機密情報を含むため）
-
-### 例
-
-```yaml
-# config/projects.yaml
-projects:
-  - id: my_client
-    name: "クライアントXコンサルティング"
-    path: "/mnt/c/Consulting/client_x"
-    status: active
-
-# projects/my_client.yaml
-id: my_client
-client:
-  name: "クライアントX"
-  company: "X株式会社"
-contract:
-  fee: "月額"
-current_tasks:
-  - id: task_001
-    name: "システムアーキテクチャレビュー"
-    status: in_progress
-```
-
-この分離設計により、将軍システムは複数の外部プロジェクトを横断的に統率しつつ、プロジェクトの詳細情報はバージョン管理の対象外に保つことができる。
-
----
-
-## 🔧 トラブルシューティング
-
-<details>
-<summary><b>MCPツールが動作しない？</b></summary>
-
-MCPツールは「遅延ロード」方式で、最初にロードが必要です：
-
-```
-# 間違い - ツールがロードされていない
-mcp__memory__read_graph()  ← エラー！
-
-# 正しい - 先にロード
-ToolSearch("select:mcp__memory__read_graph")
-mcp__memory__read_graph()  ← 動作！
-```
-
-</details>
-
-<details>
-<summary><b>エージェントが権限を求めてくる？</b></summary>
-
-`--dangerously-skip-permissions` 付きで起動していることを確認：
-
-```bash
-claude --dangerously-skip-permissions --system-prompt "..."
-```
-
-</details>
-
-<details>
-<summary><b>ワーカーが停止している？</b></summary>
-
-ワーカーのペインを確認：
-```bash
-tmux attach-session -t multiagent
-# Ctrl+B の後に数字でペインを切り替え
-```
-
-</details>
-
-<details>
-<summary><b>将軍やエージェントが落ちた？（Claude Codeプロセスがkillされた）</b></summary>
-
-**`css` 等のtmuxセッション起動エイリアスを使って再起動してはいけません。** これらのエイリアスはtmuxセッションを作成するため、既存のtmuxペイン内で実行するとセッションがネスト（入れ子）になり、入力が壊れてペインが使用不能になります。
-
-**正しい再起動方法：**
-
-```bash
-# 方法1: ペイン内でclaudeを直接実行
-claude --model opus --dangerously-skip-permissions
-
-# 方法2: 家老がrespawn-paneで強制再起動（ネストも解消される）
-tmux respawn-pane -t shogun:0.0 -k 'claude --model opus --dangerously-skip-permissions'
-```
-
-**誤ってtmuxをネストしてしまった場合：**
-1. `Ctrl+B` の後 `d` でデタッチ（内側のセッションから離脱）
-2. その後 `claude` を直接実行（`css` は使わない）
-3. デタッチが効かない場合は、別のペインから `tmux respawn-pane -k` で強制リセット
-
-</details>
-
----
-
-## 📚 tmux クイックリファレンス
-
-| コマンド | 説明 |
-|----------|------|
-| `tmux attach -t shogun` | 将軍に接続 |
-| `tmux attach -t multiagent` | ワーカーに接続 |
-| `Ctrl+B` の後 `0-8` | ペイン間を切り替え |
-| `Ctrl+B` の後 `d` | デタッチ（実行継続） |
-| `tmux kill-session -t shogun` | 将軍セッションを停止 |
-| `tmux kill-session -t multiagent` | ワーカーセッションを停止 |
-
-### 🖱️ マウス操作
-
-`first_setup.sh` が `~/.tmux.conf` に `set -g mouse on` を自動設定するため、マウスによる直感的な操作が可能です：
-
-| 操作 | 説明 |
-|------|------|
-| マウスホイール | ペイン内のスクロール（出力履歴の確認） |
-| ペインをクリック | ペイン間のフォーカス切替 |
-| ペイン境界をドラッグ | ペインのリサイズ |
-
-キーボード操作に不慣れな場合でも、マウスだけでペインの切替・スクロール・リサイズが行えます。
-
----
+- **バグ報告**: 再現手順を添えてIssueを作成してください
+- **機能アイデア**: まずDiscussionで提案してください
+- **スキル**: スキルは個人のワークフローに最適化されるものであり、このリポジトリには含めません
 
 ## 🙏 クレジット
 
-```markdown
-本プロジェクトは [multi-agent-shogun](https://github.com/yohey-w/multi-agent-shogun) をフォークし、[Claude-Code-Communication](https://github.com/Akira-Papa/Claude-Code-Communication) by Akira-Papa をベースに開発されています。
-```
-
----
+[Claude-Code-Communication](https://github.com/Akira-Papa/Claude-Code-Communication) by Akira-Papa をベースに開発。
 
 ## 📄 ライセンス
 
@@ -1054,6 +460,8 @@ MIT License - 詳細は [LICENSE](LICENSE) を参照。
 
 <div align="center">
 
-**AIの軍勢を統率せよ。より速く構築せよ。**
+**コマンド1つ。エージェント8体。連携コストゼロ。**
+
+⭐ 役に立ったらスターをお願いします — 他の人にも見つけてもらえます。
 
 </div>

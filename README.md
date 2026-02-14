@@ -1,30 +1,65 @@
 <div align="center">
 
-# multi-agent-shogun (Gemini CLI Support)
+# multi-agent-shogun
 
 **Command your AI army like a feudal warlord.**
 
-Run 3-8 AI agents in parallel — orchestrated through a samurai-inspired hierarchy with zero coordination overhead.
+Run 3-10 AI coding agents in parallel — **Gemini CLI, Claude Code, OpenAI Codex, GitHub Copilot, Kimi Code** — orchestrated through a samurai-inspired hierarchy with zero coordination overhead.
 
-**Now supports both Gemini CLI and Claude Code CLI!**
+**Talk Coding, not Vibe Coding. Speak to your phone, AI executes.**
 
 [![GitHub Stars](https://img.shields.io/github/stars/yohey-w/multi-agent-shogun?style=social)](https://github.com/yohey-w/multi-agent-shogun)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![v3.0 Multi-CLI](https://img.shields.io/badge/v3.0-Multi--CLI_Support-ff6600?style=flat-square&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiI+PHRleHQgeD0iMCIgeT0iMTIiIGZvbnQtc2l6ZT0iMTIiPuKalTwvdGV4dD48L3N2Zz4=)](https://github.com/yohey-w/multi-agent-shogun)
 [![Gemini CLI](https://img.shields.io/badge/Supports-Gemini_CLI-blue)](https://github.com/google-gemini/gemini-cli)
-[![Claude Code](https://img.shields.io/badge/Built_for-Claude_Code-blueviolet)](https://code.claude.com)
 [![Shell](https://img.shields.io/badge/Shell%2FBash-100%25-green)]()
 
 [English](README.md) | [日本語](README_ja.md)
 
 </div>
 
+<p align="center">
+  <img src="images/screenshots/hero/latest-translucent-20260210-190453.png" alt="Latest translucent command session in the Shogun pane" width="940">
+</p>
+
+<p align="center">
+  <img src="images/screenshots/hero/latest-translucent-20260208-084602.png" alt="Quick natural-language command in the Shogun pane" width="420">
+  <img src="images/company-creed-all-panes.png" alt="Karo and Ashigaru panes reacting in parallel" width="520">
+</p>
+
 <p align="center"><i>One Karo (manager) coordinating 3-8 Ashigaru (workers) — real session, no mock data.</i></p>
 
 ---
 
-Give a single command. The **Shogun** (general) delegates to the **Karo** (steward), who distributes work across up to **8 Ashigaru** (foot soldiers) — all running as independent Claude Code processes in tmux. Communication flows through YAML files and tmux `send-keys`, meaning **zero extra API calls** for agent coordination.
+## What is this?
 
-<!-- TODO: add demo.gif — record with asciinema or vhs -->
+**multi-agent-shogun** is a system that runs multiple AI coding CLI instances simultaneously, orchestrating them like a feudal Japanese army. Supports **Gemini CLI**, **Claude Code**, **OpenAI Codex**, **GitHub Copilot**, and **Kimi Code**.
+
+**Why use it?**
+- One command spawns 3-8 AI workers executing in parallel
+- Zero wait time — give your next order while tasks run in the background
+- AI remembers your preferences across sessions (Memory MCP)
+- Real-time progress on a dashboard
+
+```
+        You (上様 / The Lord)
+             │
+             ▼  Give orders
+      ┌─────────────┐
+      │   SHOGUN    │  ← Receives your command, delegates instantly
+      └──────┬──────┘
+             │  YAML + tmux
+      ┌──────▼──────┐
+      │    KARO     │  ← Distributes tasks to workers
+      └──────┬──────┘
+             │
+    ┌─┬─┬─┬─┴─┬─┬─┬─┐
+    │1│2│3│4│5│6│7│8│  ← 3-8 workers execute in parallel
+    └─┴─┴─┴─┴─┴─┴─┴─┘
+         ASHIGARU
+```
+
+---
 
 ## Why Shogun?
 
@@ -41,11 +76,53 @@ Most multi-agent frameworks burn API tokens on coordination. Shogun doesn't.
 
 ### What makes this different
 
-**Zero coordination overhead** — Agents talk through YAML files on disk. The only API calls are for actual work, not orchestration. Run 3 agents and pay only for 3 agents' work.
+**Zero coordination overhead** — Agents talk through YAML files on disk. The only API calls are for actual work, not orchestration. Run 8 agents and pay only for 8 agents' work.
 
 **Full transparency** — Every agent runs in a visible tmux pane. Every instruction, report, and decision is a plain YAML file you can read, diff, and version-control. No black boxes.
 
 **Battle-tested hierarchy** — The Shogun → Karo → Ashigaru chain of command prevents conflicts by design: clear ownership, dedicated files per agent, event-driven communication, no polling.
+
+---
+
+## Why CLI (Not API)?
+
+Most AI coding tools charge per token. Running 8 Opus-grade agents through the API costs **$100+/hour**. CLI subscriptions flip this:
+
+| | API (Per-Token) | CLI (Flat-Rate) |
+|---|---|---|
+| **8 agents × Opus** | ~$100+/hour | ~$200/month |
+| **Cost predictability** | Unpredictable spikes | Fixed monthly bill |
+| **Usage anxiety** | Every token counts | Unlimited |
+| **Experimentation budget** | Constrained | Deploy freely |
+
+**"Use AI recklessly"** — With flat-rate CLI subscriptions, deploy 8 agents without hesitation. The cost is the same whether they work 1 hour or 24 hours. No more choosing between "good enough" and "thorough" — just run more agents.
+
+### Multi-CLI Support
+
+Shogun isn't locked to one vendor. The system supports 5 CLI tools, each with unique strengths:
+
+| CLI | Key Strength | Default Model |
+|-----|-------------|---------------|
+| **Gemini CLI** | **Rate limit friendly**, Free tier available (1k req/day), **1M token context** | Gemini 1.5 Pro / Flash |
+| **Claude Code** | Battle-tested tmux integration, Memory MCP, dedicated file tools (Read/Write/Edit/Glob/Grep) | Claude Sonnet 4.5 |
+| **OpenAI Codex** | Sandbox execution, JSONL structured output, `codex exec` headless mode, **per-model `--model` flag** | gpt-5.3-codex / **gpt-5.3-codex-spark** |
+| **GitHub Copilot** | Built-in GitHub MCP, 4 specialized agents (Explore/Task/Plan/Code-review), `/delegate` to coding agent | Claude Sonnet 4.5 |
+| **Kimi Code** | Free tier available, strong multilingual support | Kimi k2 |
+
+A unified instruction build system generates CLI-specific instruction files from shared templates:
+
+```
+instructions/
+├── common/              # Shared rules (all CLIs)
+├── cli_specific/        # CLI-specific tool descriptions
+│   ├── claude_tools.md  # Claude Code tools & features
+│   └── copilot_tools.md # GitHub Copilot CLI tools & features
+└── roles/               # Role definitions (shogun, karo, ashigaru)
+    ↓ build
+CLAUDE.md / AGENTS.md / copilot-instructions.md  ← Generated per CLI
+```
+
+One source of truth, zero sync drift. Change a rule once, all CLIs get it.
 
 ---
 
@@ -74,94 +151,94 @@ Skills grow organically from real work — not from a predefined template librar
 
 ---
 
-## Architecture
-
-```
-        You (上様 / The Lord)
-             │
-             ▼  Give orders
-      ┌─────────────┐
-      │   SHOGUN    │  Receives your command, plans strategy
-      │    (将軍)    │  Session: shogun
-      ┌──────▼──────┐
-      │    KARO     │  Breaks tasks down, assigns to workers
-      │    (家老)    │  Session: multiagent, pane 0
-      └──────┬──────┘
-             │  YAML + send-keys
-    ┌───┬──┴──┬───┐
-    │ 1 │  2  │ 3 │  Execute in parallel
-    └───┴─────┴───┘
-         ASHIGARU (足軽)
-         Panes 1-3
-```
-
-**Communication protocol:**
-- **Downward** (orders): Write YAML → wake target with `tmux send-keys`
-- **Upward** (reports): Write YAML only (no send-keys to avoid interrupting your input)
-- **Polling**: Forbidden. Event-driven only. Your API bill stays predictable.
-
-**Context persistence (4 layers):**
-
-| Layer | What | Survives |
-|-------|------|----------|
-| Memory MCP | Preferences, rules, cross-project knowledge | Everything |
-| Project files | `config/projects.yaml`, `context/*.md` | Everything |
-| YAML Queue | Tasks, reports (source of truth) | Everything |
-| Session | `CLAUDE.md`, instructions | `/clear` wipes it |
-
-After `/clear`, an agent recovers in **~2,000 tokens** by reading Memory MCP + its task YAML. No expensive re-prompting.
-
----
-
-## Battle Formations
-
-Agents can be deployed in different **formations** (陣形 / *jindate*) depending on the task:
-
-### Gemini Formations (Total 3 Agents)
-
-| Formation | Ashigaru 1 | Ashigaru 2-3 | Best for |
-|-----------|------------|--------------|----------|
-| **Normal** (default) | **Pro** | Flash | Default — balance cost & capability |
-| **Battle** (`-k` flag) | **Pro** | **Pro** | Critical tasks — all Pro models |
-
-### Claude Formations (Total 8 Agents)
-
-| Formation | Ashigaru 1–4 | Ashigaru 5–8 | Best for |
-|-----------|-------------|-------------|----------|
-| **Normal** (default) | Sonnet | Opus | Everyday tasks — cost-efficient |
-| **Battle** (`-k` flag) | Opus | Opus | Critical tasks — maximum capability |
-
-```bash
-./shutsujin_departure.sh          # Normal formation
-./shutsujin_departure.sh -k       # Battle formation (kessen)
-```
-
-The Karo can also promote individual Ashigaru mid-session with `/model opus` when a specific task demands it.
-
----
-
 ## Quick Start
 
 ### Windows (WSL2)
 
+<table>
+<tr>
+<td width="60">
+
+**Step 1**
+
+</td>
+<td>
+
+📥 **Download the repository**
+
+[Download ZIP](https://github.com/yohey-w/multi-agent-shogun/archive/refs/heads/main.zip) and extract to `C:\tools\multi-agent-shogun`
+
+*Or use git:* `git clone https://github.com/yohey-w/multi-agent-shogun.git C:\tools\multi-agent-shogun`
+
+</td>
+</tr>
+<tr>
+<td>
+
+**Step 2**
+
+</td>
+<td>
+
+🖱️ **Run `install.bat`**
+
+Right-click → "Run as Administrator" (if WSL2 is not installed). Sets up WSL2 + Ubuntu automatically.
+
+</td>
+</tr>
+<tr>
+<td>
+
+**Step 3**
+
+</td>
+<td>
+
+🐧 **Open Ubuntu and run** (first time only)
+
 ```bash
-# 1. Clone
-git clone https://github.com/hamatani63/multi-agent-shogun.git C:\tools\multi-agent-shogun
-
-# 2. Run installer (right-click → Run as Administrator)
-#    → install.bat handles WSL2 + Ubuntu setup automatically
-
-# 3. In Ubuntu terminal:
 cd /mnt/c/tools/multi-agent-shogun
-./first_setup.sh          # One-time: installs tmux, Node.js, Claude Code CLI
-./shutsujin_departure.sh  # Deploy your army
+./first_setup.sh
+```
+
+</td>
+</tr>
+<tr>
+<td>
+
+**Step 4**
+
+</td>
+<td>
+
+✅ **Deploy!**
+
+```bash
+./shutsujin_departure.sh
+```
+
+</td>
+</tr>
+</table>
+
+#### First-time only: Authentication
+
+After `first_setup.sh`, run these commands once to authenticate:
+
+```bash
+# 1. Apply PATH changes
+source ~/.bashrc
+
+# 2. Authenticate (Command depends on your CLI backend)
+claude --dangerously-skip-permissions  # For Claude
+gemini login                           # For Gemini
 ```
 
 ### Linux / macOS
 
 ```bash
 # 1. Clone
-git clone https://github.com/hamatani63/multi-agent-shogun.git ~/multi-agent-shogun
+git clone https://github.com/yohey-w/multi-agent-shogun.git ~/multi-agent-shogun
 cd ~/multi-agent-shogun && chmod +x *.sh
 
 # 2. Setup + Deploy
@@ -230,65 +307,6 @@ Control your AI army from your phone — bed, café, or bathroom.
 
 ---
 
-## How It Works
-
-### 1. Give an order
-
-```
-You: "Research the top 5 MCP servers and create a comparison table"
-```
-
-### 2. Shogun delegates instantly
-
-The Shogun writes the task to `queue/shogun_to_karo.yaml` and wakes the Karo. Control returns to you immediately — no waiting.
-
-### 3. Karo distributes
-
-The Karo breaks the task into subtasks and assigns each to an Ashigaru:
-
-| Worker | Assignment |
-|--------|-----------|
-| Ashigaru 1 | Research Notion MCP |
-| Ashigaru 2 | Research GitHub MCP |
-| Ashigaru 3 | Research Playwright MCP |
-| Ashigaru 4 | Research Memory MCP |
-| Ashigaru 5 | Research Sequential Thinking MCP |
-
-### 4. Parallel execution
-
-All 5 Ashigaru research simultaneously. You can watch them work in real time:
-
-<p align="center">
-  <img src="assets/screenshots/tmux_multiagent_working.png" alt="Ashigaru agents working in parallel" width="700">
-</p>
-
-### 5. Results in dashboard
-
-Open `dashboard.md` to see aggregated results, skill candidates, and blockers — all maintained by the Karo.
-
----
-
-## Real-World Use Cases
-
-This system manages **all white-collar tasks**, not just code. Projects can live anywhere on your filesystem.
-
-```yaml
-# config/projects.yaml
-projects:
-  - id: client_x
-    name: "Client X Consulting"
-    path: "/mnt/c/Consulting/client_x"
-    status: active
-```
-
-**Research sprints** — multiple agents research different topics in parallel, results compiled in minutes.
-
-**Multi-project management** — Switch between client projects without losing context. Memory MCP preserves preferences across sessions.
-
-**Document generation** — Technical writing, test case reviews, comparison tables — distributed across agents and merged.
-
----
-
 ## Configuration
 
 ### Language
@@ -299,9 +317,31 @@ language: ja   # Samurai Japanese only
 language: en   # Samurai Japanese + English translation
 ```
 
-### 🧠 Model Configuration (Gemini)
+### Backend Switching
+
+```yaml
+# config/settings.yaml
+
+# Claude backend (default)
+# backend: claude
+
+# Gemini backend
+backend: gemini
+```
+
+### 🧠 Gemini Configuration
 
 The Gemini CLI configuration is designed for **rate limit efficiency** and **response speed**.
+
+```yaml
+gemini:
+  model_shogun: gemini-3-flash-preview
+  model_karo: gemini-3-pro-preview
+  model_ashigaru_strong: gemini-3-pro-preview
+  model_ashigaru_fast: gemini-3-flash-preview
+  num_ashigaru: 3  # Reduced from 8 to avoid rate limits
+  auth_method: oauth
+```
 
 | Agent | Model | Role | Reason |
 |-------|-------|------|--------|
@@ -310,8 +350,6 @@ The Gemini CLI configuration is designed for **rate limit efficiency** and **res
 | **Ashigaru 1** | **Pro** | Main Force | Complex reasoning & coding (Strong Model) |
 | **Ashigaru 2-3** | Flash | Support | Fast research & simple tasks (Fast Model) |
 
-*Note: Model names can be customized in `config/settings.yaml` (e.g., `gemini-3-pro-preview`).*
-
 #### Formation Modes (Gemini)
 
 | Mode | Ashigaru 1 | Ashigaru 2-3 | Command |
@@ -319,12 +357,7 @@ The Gemini CLI configuration is designed for **rate limit efficiency** and **res
 | **Normal** (Default) | **Pro** | Flash | `./shutsujin_departure.sh` |
 | **Kessen** (Battle) | **Pro** | **Pro** | `./shutsujin_departure.sh -k` |
 
-- **Normal Formation**: For daily tasks. Ashigaru 1 uses Pro model for balance.
-- **Kessen Formation**: For difficult tasks. All Ashigaru use Pro model for maximum capability.
-
----
-
-### 🧠 Model Configuration (Claude)
+### 🧠 Claude Configuration
 
 | Agent | Default Model | Thinking |
 |-------|--------------|----------|
@@ -338,7 +371,9 @@ The Gemini CLI configuration is designed for **rate limit efficiency** and **res
 - **Normal**: Half Sonnet, Half Opus
 - **Kessen**: All Opus (`-k` option)
 
-### MCP servers (Setup Guide)
+---
+
+## MCP servers (Setup Guide)
 
 #### Gemini CLI
 
@@ -353,26 +388,10 @@ For Gemini CLI, edit `~/.gemini/settings.json` directly to add MCP servers.
       "env": {
         "MEMORY_FILE_PATH": "/absolute/path/to/multi-agent-shogun/memory/shogun_memory.jsonl"
       }
-    },
-    "github": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github"],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "your_token_here"
-      }
-    },
-    "notion": {
-      "command": "npx",
-      "args": ["-y", "@notionhq/notion-mcp-server"],
-      "env": {
-        "NOTION_TOKEN": "your_token_here"
-      }
     }
   }
 }
 ```
-
-After saving the file, restart the Gemini CLI for changes to take effect.
 
 #### Claude Code CLI
 
@@ -390,151 +409,57 @@ claude mcp add github -e GITHUB_PERSONAL_ACCESS_TOKEN=your_pat -- npx -y @modelc
 claude mcp add playwright -- npx @playwright/mcp@latest
 ```
 
-### Screenshot integration
-
-```yaml
-# config/settings.yaml
-screenshot:
-  path: "/mnt/c/Users/YourName/Pictures/Screenshots"
-```
-
-Tell the Shogun "check the latest screenshot" and it reads your screen captures for visual context. (`Win+Shift+S` on Windows.)
-
 ---
 
-## Gemini CLI Support
-
-multi-agent-shogun now supports **Gemini CLI** as an alternative backend to Claude Code CLI.
-
-### Switching backends
-
-Edit `config/settings.yaml`:
-
-```yaml
-# Claude backend
-# backend: claude
-
-# Gemini backend (default)
-backend: gemini
-```
-
-### Gemini-specific settings
-
-```yaml
-gemini:
-  model_shogun: gemini-3-flash-preview
-  model_karo: gemini-3-pro-preview
-  model_ashigaru_strong: gemini-3-pro-preview
-  model_ashigaru_fast: gemini-3-flash-preview
-  num_ashigaru: 3  # Reduced from 8 to avoid rate limits
-  auth_method: oauth
-```
-
-### Key differences
-
-| Feature | Claude Code CLI | Gemini CLI |
-|---------|----------------|------------|
-| Auto-approval | `--dangerously-skip-permissions` | `--yolo` |
-| Recommended Ashigaru | 8 | 3 (rate limit friendly) |
-| Free tier | None (API billing) | 1,000 req/day per model |
-| Instruction compliance | High | Requires explicit prompts |
-
-### Gemini-specific notes
-
-- **Rate limits**: Google OAuth free tier has daily limits. Reduce Ashigaru count to 3 for stability.
-- **Model switching**: If quota exhausted on one model, switch to another (e.g., `gemini-3-flash-preview`).
-- **Startup prompts**: Gemini needs explicit delegation rules in startup messages to follow the hierarchy properly.
-
-For detailed implementation notes, see [docs/08_gemini_cli_implementation_plan.md](docs/08_gemini_cli_implementation_plan.md).
-
----
-
-## File Structure
-
-```
-multi-agent-shogun/
-├── install.bat                # Windows first-time setup
-├── first_setup.sh             # Linux/Mac first-time setup
-├── shutsujin_departure.sh     # Daily deployment script
-│
-├── instructions/              # Agent behavior definitions
-│   ├── shogun.md
-│   ├── karo_gemini.md
-│   └── ashigaru.md
-│
-├── config/
-│   ├── settings.yaml          # Language, model, screenshot settings
-│   └── projects.yaml          # Project registry
-│
-├── queue/                     # Communication (source of truth)
-│   ├── shogun_to_karo.yaml
-│   ├── tasks/ashigaru{1-N}.yaml
-│   └── reports/ashigaru{1-N}_report.yaml
-│
-├── memory/                    # Memory MCP persistent storage
-├── dashboard.md               # Human-readable status board
-└── CLAUDE.md                  # System instructions (auto-loaded)
-```
-
----
-
-## Troubleshooting
+## Advanced
 
 <details>
-<summary><b>Agents asking for permissions?</b></summary>
+<summary><b>Script Architecture</b></summary>
 
-Agents should start with `--dangerously-skip-permissions`. This is handled automatically by `shutsujin_departure.sh`.
-
-</details>
-
-<details>
-<summary><b>MCP tools not loading?</b></summary>
-
-MCP tools are lazy-loaded. Search first, then use:
 ```
-ToolSearch("select:mcp__memory__read_graph")
-mcp__memory__read_graph()
+┌─────────────────────────────────────────────────────────────────────┐
+│                      First-time Setup (Run once)                    │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  install.bat (Windows)                                              │
+│      │                                                              │
+│      ├── Check/Install WSL2                                         │
+│      └── Check/Install Ubuntu                                       │
+│                                                                     │
+│  first_setup.sh (Ubuntu/WSL Manual Run)                             │
+│      │                                                              │
+│      ├── Check/Install tmux                                         │
+│      ├── Check/Install Node.js v20+ (via nvm)                       │
+│      ├── Check/Install Claude Code CLI                              │
+│      └── Configure Memory MCP Server                                │
+│                                                                     │
+├─────────────────────────────────────────────────────────────────────┤
+│                      Daily Startup (Run daily)                      │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  shutsujin_departure.sh                                             │
+│      │                                                              │
+│      ├──▶ Create tmux sessions                                      │
+│      │         • "shogun" (1 pane)                                  │
+│      │         • "multiagent" (4-9 panes)                           │
+│      │                                                              │
+│      ├──▶ Reset queue files and dashboard                           │
+│      │                                                              │
+│      └──▶ Launch Claude/Gemini in all agents                        │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 </details>
 
 <details>
-<summary><b>Agent crashed?</b></summary>
+<summary><b>Technical Details</b></summary>
 
-Don't use `css`/`csm` aliases inside an existing tmux session (causes nesting). Instead:
-
-```bash
-# From the crashed pane:
-claude --model opus --dangerously-skip-permissions
-
-# Or from another pane:
-tmux respawn-pane -t shogun:0.0 -k 'claude --model opus --dangerously-skip-permissions'
-```
+- **Agent self-identification** (`@agent_id`) — Stable identity via tmux user options, immune to pane reordering
+- **Battle mode** (`-k` flag) — All-Opus/Pro formation for maximum capability
+- **Task dependency system** (`blockedBy`) — Automatic unblocking of dependent tasks
 
 </details>
-
-<details>
-<summary><b>Workers stuck?</b></summary>
-
-```bash
-tmux attach-session -t multiagent
-# Ctrl+B then 0-8 to switch panes
-```
-
-</details>
-
----
-
-## tmux Quick Reference
-
-| Command | Description |
-|---------|-------------|
-| `tmux attach -t shogun` | Connect to the Shogun |
-| `tmux attach -t multiagent` | Connect to workers |
-| `Ctrl+B` then `0`–`8` | Switch panes |
-| `Ctrl+B` then `d` | Detach (agents keep running) |
-
-Mouse support is enabled by default (`set -g mouse on` in `~/.tmux.conf`, configured by `first_setup.sh`). Scroll, click to focus, drag to resize.
 
 ---
 
