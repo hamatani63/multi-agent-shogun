@@ -300,26 +300,51 @@ else
     fi
 fi
 
-# --- inotify-tools (inotifywait) ---
-if command -v inotifywait &> /dev/null; then
-    log_success "inotify-tools がインストール済みです"
-    RESULTS+=("inotify-tools: OK")
-else
-    log_warn "inotify-tools がインストールされていません"
-    if command -v apt-get &> /dev/null; then
-        log_info "inotify-tools をインストール中..."
-        if sudo apt-get install -y inotify-tools 2>/dev/null; then
-            log_success "inotify-tools インストール完了"
-            RESULTS+=("inotify-tools: インストール完了")
+# --- inotify-tools (inotifywait) / fswatch (macOS) ---
+if [ "$(uname -s)" = "Darwin" ]; then
+    if command -v fswatch &> /dev/null; then
+        log_success "fswatch がインストール済みです"
+        RESULTS+=("fswatch: OK")
+    else
+        log_warn "fswatch がインストールされていません"
+        if command -v brew &> /dev/null; then
+            log_info "fswatch をインストール中..."
+            if brew install fswatch; then
+                log_success "fswatch インストール完了"
+                RESULTS+=("fswatch: インストール完了")
+            else
+                log_error "fswatch のインストールに失敗しました"
+                RESULTS+=("fswatch: インストール失敗")
+                HAS_ERROR=true
+            fi
         else
-            log_error "inotify-tools のインストールに失敗しました"
-            RESULTS+=("inotify-tools: インストール失敗")
+            log_error "Homebrew が見つかりません。手動で fswatch をインストールしてください"
+            RESULTS+=("fswatch: 未インストール (手動インストール必要)")
             HAS_ERROR=true
         fi
+    fi
+else
+    # Linux
+    if command -v inotifywait &> /dev/null; then
+        log_success "inotify-tools がインストール済みです"
+        RESULTS+=("inotify-tools: OK")
     else
-        log_error "apt-get が見つかりません。手動で inotify-tools をインストールしてください"
-        RESULTS+=("inotify-tools: 未インストール (手動インストール必要)")
-        HAS_ERROR=true
+        log_warn "inotify-tools がインストールされていません"
+        if command -v apt-get &> /dev/null; then
+            log_info "inotify-tools をインストール中..."
+            if sudo apt-get install -y inotify-tools 2>/dev/null; then
+                log_success "inotify-tools インストール完了"
+                RESULTS+=("inotify-tools: インストール完了")
+            else
+                log_error "inotify-tools のインストールに失敗しました"
+                RESULTS+=("inotify-tools: インストール失敗")
+                HAS_ERROR=true
+            fi
+        else
+            log_error "apt-get が見つかりません。手動で inotify-tools をインストールしてください"
+            RESULTS+=("inotify-tools: 未インストール (手動インストール必要)")
+            HAS_ERROR=true
+        fi
     fi
 fi
 

@@ -506,6 +506,25 @@ tmux select-pane -t shogun:main -P 'bg=#002b36'  # 将軍の Solarized Dark
 tmux set-option -p -t shogun:main @agent_id "shogun"
 
 log_success "  └─ 将軍の本陣、構築完了"
+
+# Gemini: Start Shogun agent if not setup-only
+if [ "$BACKEND" = "gemini" ] && [ "$SETUP_ONLY" = false ]; then
+    log_info "👑 将軍(Gemini)を起動中..."
+    SHOGUN_MODEL=$(grep -A20 "^gemini:" ./config/settings.yaml 2>/dev/null | grep "model_shogun:" | awk '{print $2}' || echo "gemini-3-flash-preview")
+    
+    CMD="gemini --model $SHOGUN_MODEL --yolo"
+    tmux send-keys -t shogun:main "$CMD" Enter
+    
+    # Send instructions via tmux buffer
+    if [ -f "instructions/shogun.md" ]; then
+        sleep 2
+        tmux load-buffer "instructions/shogun.md"
+        tmux paste-buffer -t shogun:main
+        tmux send-keys -t shogun:main Enter
+    fi
+    log_success "  └─ 将軍起動完了"
+fi
+
 echo ""
 
 # pane-base-index を取得（1 の環境ではペインは 1,2,... になる）
@@ -741,12 +760,12 @@ else
                  fi
              fi
              CMD="gemini --model $MODEL --yolo"
-             
-             # Add system instruction file
+
+             # Determine instruction file
              if [ "$AGENT_ID" = "karo" ]; then
-                 CMD="$CMD --system-instruction instructions/karo.md"
+                 INSTRUCTION_FILE="instructions/karo.md"
              else
-                 CMD="$CMD --system-instruction instructions/ashigaru.md"
+                 INSTRUCTION_FILE="instructions/ashigaru.md"
              fi
         else
             # Claude/Other (Upstream logic)
@@ -771,6 +790,14 @@ else
         log_info "  ├─ ${AGENT_ID} 起動..."
         tmux send-keys -t "multiagent:agents.${p}" "$CMD" Enter
         
+        # Gemini: Send system instruction via tmux buffer
+        if [ "$BACKEND" = "gemini" ] && [ -n "$INSTRUCTION_FILE" ]; then
+            sleep 2  # Wait for REPL to start
+            tmux load-buffer "$INSTRUCTION_FILE"
+            tmux paste-buffer -t "multiagent:agents.${p}"
+            tmux send-keys -t "multiagent:agents.${p}" Enter
+        fi
+
         sleep "$SLEEP_INTERVAL"
     done
     

@@ -27,6 +27,15 @@
 if [ "${__INBOX_WATCHER_TESTING__:-}" != "1" ]; then
     set -euo pipefail
 
+    # Polyfill for timeout command (macOS/BSD support via perl or gtimeout)
+    if ! command -v timeout &>/dev/null; then
+        if command -v gtimeout &>/dev/null; then
+            timeout() { gtimeout "$@"; }
+        else
+            timeout() { perl -e 'alarm shift; exec @ARGV' "$@"; }
+        fi
+    fi
+
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
     AGENT_ID="$1"
     PANE_TARGET="$2"
@@ -48,9 +57,11 @@ if [ "${__INBOX_WATCHER_TESTING__:-}" != "1" ]; then
 
     echo "[$(date)] inbox_watcher started — agent: $AGENT_ID, pane: $PANE_TARGET, cli: $CLI_TYPE" >&2
 
-    # Ensure inotifywait is available
-    if ! command -v inotifywait &>/dev/null; then
-        echo "[inbox_watcher] ERROR: inotifywait not found. Install: sudo apt install inotify-tools" >&2
+    # Ensure inotifywait or fswatch is available
+    if ! command -v inotifywait &>/dev/null && ! command -v fswatch &>/dev/null; then
+        echo "[inbox_watcher] ERROR: Neither inotifywait nor fswatch found." >&2
+        echo "  Linux: sudo apt install inotify-tools" >&2
+        echo "  macOS: brew install fswatch" >&2
         exit 1
     fi
 fi
@@ -863,8 +874,27 @@ while true; do
     # Block until file is modified OR timeout (safety net for WSL2)
     # set +e: inotifywait returns 2 on timeout, which would kill script under set -e
     set +e
-    inotifywait -q -t "$INOTIFY_TIMEOUT" -e modify -e close_write "$INBOX" 2>/dev/null
-    rc=$?
+    set +e
+    if command -v inotifywait &>/dev/null; then
+        inotifywait -q -t "$INOTIFY_TIMEOUT" -e modify -e close_write "$INBOX" 2>/dev/null
+        rc=$?
+    elif command -v fswatch &>/dev/null; then
+        # fswatch -1 exits after one event. Use timeout to simulate timeout.
+        timeout "$INOTIFY_TIMEOUT" fswatch -1 "$INBOX" >/dev/null 2>&1
+        rc_fswatch=$?
+        # timeout exit codes: 124 (coreutils), 142 (perl alarm), 143 (sigterm)
+        if [ "$rc_fswatch" -eq 124 ] || [ "$rc_fswatch" -eq 142 ] || [ "$rc_fswatch" -eq 143 ]; then
+            rc=2 # Map to inotifywait timeout code
+        elif [ "$rc_fswatch" -eq 0 ]; then
+            rc=0 # Success (event)
+        else
+            rc=1 # Error
+        fi
+    else
+        sleep "$INOTIFY_TIMEOUT"
+        rc=2
+    fi
+    # rc=$? (capture from inotifywait if used)
     set -e
 
     # rc=0: event fired (instant delivery)

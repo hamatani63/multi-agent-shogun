@@ -1,132 +1,65 @@
-# ══════════════════════════════════════════════════
-# Whitelist-based .gitignore
-# デフォルト全除外 → OSS公開対象のみ許可
-# ══════════════════════════════════════════════════
+# ===========================================
+# .gitignore.base - 共通部分（コミット対象）
+# ===========================================
+# このファイルは起動スクリプトによって
+# .gitignore.{backend} と結合され .gitignore が生成される
+#
+# 注意: 生成された .gitignore 自体はトラックしない
+# テンプレートファイルのみコミットする:
+#   - .gitignore.base (このファイル)
+#   - .gitignore.gemini
+#   - .gitignore.claude
 
-# Step 1: 全て除外
-*
+# 生成された .gitignore（テンプレートから自動生成されるため）
+.gitignore
 
-# Step 2: ディレクトリの探索を許可（中身は個別に許可）
-!*/
+# Order file (internal use only)
+claude-shogun-orders.md
 
-# Step 3: OSS公開対象ファイルを許可
-!.gitignore
-!.gitattributes
-!.gitleaks.toml
-!CLAUDE.md
-!LICENSE
-!README.md
-!README_ja.md
-!CONTRIBUTING.md
-!SECURITY.md
 
-# Claude Code settings (spinner verbs only, no secrets)
-!.claude/
+# Claude Code settings
+.claude/*
 !.claude/settings.json
+.mcp.json
 
-# Instructions (core OSS)
-!instructions/
-!instructions/shogun.md
-!instructions/karo.md
-!instructions/ashigaru.md
+# Test outputs (generated during testing)
+test_output/
 
-# Multi-CLI: CLI-specific tool descriptions
-!instructions/cli_specific/
-!instructions/cli_specific/claude_tools.md
-!instructions/cli_specific/codex_tools.md
-!instructions/cli_specific/copilot_tools.md
-!instructions/cli_specific/kimi_tools.md
+# Generated skills (local development)
+skills/
 
-# Multi-CLI: Build template parts (roles, common sections)
-!instructions/roles/
-!instructions/roles/*.md
-!instructions/common/
-!instructions/common/*.md
+# Temporary files
+*.tmp
+*.bak
 
-# Multi-CLI: Generated instruction files (built by build_instructions.sh)
-!instructions/generated/
-!instructions/generated/*.md
+# Demo/analysis outputs (generated during tasks)
+demo_output/
 
-# Multi-CLI: CLI adapter library + ntfy auth
-!lib/
-!lib/cli_adapter.sh
-!lib/ntfy_auth.sh
+# Memory MCP data (local to each installation)
+memory/
 
-# Multi-CLI: Codex auto-load file
-!AGENTS.md
-
-# Setup and deployment scripts
-!shutsujin_departure.sh
-!first_setup.sh
-!setup.sh
-!install.bat
-
-# Development tooling
-!Makefile
-
-# Config (sample files only, no secrets)
-!config/
-!config/ntfy_auth.env.sample
-!config/gemini_settings.json.template
-
-# Templates
-!templates/
-!templates/**
-
-# Context README
-!context/
+# Project context (local to each installation, except README)
+context/
 !context/README.md
 
-# Scripts
-!scripts/
-!scripts/inbox_write.sh
-!scripts/inbox_watcher.sh
-!scripts/watcher_supervisor.sh
-!scripts/ntfy.sh
-!scripts/ntfy_listener.sh
-!scripts/build_instructions.sh
+# Project config
+config/projects.yaml
+config/settings.yaml
 
+# Logs
+logs/
 
-# SayTask (sample template only, not actual data)
-!saytask/
-!saytask/streaks.yaml.sample
+# Project details (contains client/confidential info)
+projects/
 
-# Docs
-!docs/
-!docs/philosophy.md
+# Internal docs (operation logs, test plans, article drafts)
+docs/
+archive/
+# ===========================================
+# .gitignore.gemini - Gemini CLI用追加パターン
+# ===========================================
+# Gemini CLIはqueue/やdashboard.mdにアクセスする必要があるため
+# これらは除外パターンに含めない
 
-# Screenshots (masked — no secrets)
-!images/
-!images/company-creed-all-panes.png
-!images/screenshots/
-!images/screenshots/tdd_ndd_rdd.png
-!images/screenshots/masked/
-!images/screenshots/masked/ntfy_saytask_rename.jpg
-!images/screenshots/masked/ntfy_cmd043_progress.jpg
-!images/screenshots/masked/ntfy_bloom_oc_test.jpg
-!images/screenshots/masked/ntfy_persona_eval_complete.jpg
-!images/screenshots/masked/ntfy_tasklist_v1_before.jpg
-!images/screenshots/masked/ntfy_tasklist_v2_aligned.jpg
-!images/screenshots/hero/
-!images/screenshots/hero/latest-translucent-20260210-190453.png
-!images/screenshots/hero/latest-translucent-20260208-084602.png
-
-# Skills (skill-creator only)
-!skills/
-!skills/skill-creator/
-!skills/skill-creator/SKILL.md
-
-# Tests
-!tests/
-!tests/*.bats
-!tests/unit/
-!tests/unit/*.bats
-!tests/integration/
-!tests/integration/*.bats
-!tests/test_helper/
-!tests/test_helper/README.md
-
-# CI/CD
-!.github/
-!.github/workflows/
-!.github/workflows/*.yml
+# (このファイルは意図的に空に近い)
+# queue/, dashboard.md 等はGemini CLIがアクセスするため除外しない
